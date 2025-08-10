@@ -1,0 +1,26 @@
+#version 330 core
+in vec2 UV;
+in vec3 Normal;
+in vec3 FragPos;
+
+out vec4 FragColor;
+
+//uniform sampler2D earthTexture;
+uniform vec3 lightPos; // Позиция источника света (в мировых координатах)
+uniform vec3 lightColor;
+
+uniform vec3 objectColor;
+
+void main() {
+    // Ambient освещение (фоновый свет)
+    //float ambientStrength = 0.1;
+    //vec3 ambient = ambientStrength * lightColor;
+
+    // Диффузное освещение
+    vec3 norm = normalize(Normal);
+    vec3 lightDir = normalize(lightPos - FragPos);
+    float diff = max(dot(norm, lightDir), 0.0);
+    vec3 diffuse = diff * lightColor;
+
+    FragColor = vec4(objectColor * diffuse, 1.0);
+}
