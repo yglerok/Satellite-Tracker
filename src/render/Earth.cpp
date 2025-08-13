@@ -7,10 +7,15 @@
 #include <SDL3/SDL.h>
 #include <glm/gtc/matrix_transform.hpp>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
+#include <iostream>
+
 Earth::Earth()
 {
     genarateSphereVertices();
-    loadTexture();
+    loadTexture("res/textures/earth.jpg");
 
     // создание vao, vbo
     glGenVertexArrays(1, &vao);
@@ -46,13 +51,36 @@ Earth::Earth()
 
 Earth::~Earth()
 {
+    glDeleteTextures(1, &texture);
     glDeleteBuffers(1, &vbo);
+    glDeleteBuffers(1, &ebo);
     glDeleteVertexArrays(1, &vao);
 }
 
-bool Earth::loadTexture()
+void Earth::loadTexture(const std::string& texturePath)
 {
-    return false;
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+
+    // Настройки фильтрации
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    // Загрузка изображения
+    int width, height, channels;
+    
+    unsigned char* data = stbi_load(texturePath.c_str(), &width, &height, &channels, 0);
+    if (!data) {
+        std::cerr << "Can't load texture: " << texturePath << std::endl;
+        return;
+    }
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0,
+        channels == 4 ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE, data);
+    glGenerateMipmap(GL_TEXTURE_2D);
+
+    stbi_image_free(data);
 }
 
 void Earth::genarateSphereVertices(int segments)
@@ -72,7 +100,7 @@ void Earth::genarateSphereVertices(int segments)
             );
             // UV-координаты 
             v.uv = glm::vec2(
-                static_cast<float>(lon) / segments,
+                1.0f - static_cast<float>(lon) / segments,
                 static_cast<float>(lat) / segments
             );
             // нормаль = нормализованная позиция
@@ -95,34 +123,34 @@ void Earth::genarateSphereVertices(int segments)
             // порядок против час. стрелки
 
             indices.push_back(first);
-            indices.push_back(second);
             indices.push_back(first + 1);
-
             indices.push_back(second);
+            
+            indices.push_back(first + 1);
             indices.push_back(second + 1);
-            indices.push_back(first + 1);
+            indices.push_back(second);
+            
+            
         }
     }
 }
 
-void Earth::render(const glm::mat4& view, const glm::mat4& projection, GLuint shader) const
+void Earth::render(const glm::mat4& model, const glm::mat4& view, const glm::mat4& projection, GLuint shader) const
 {
     glUseProgram(shader);
 
-    // Матрица модели (вращение земли)
-    /*glm::mat4 model = glm::rotate(glm::mat4(1.0f), (float)SDL_GetTicks() / 1000.0f,
-        glm::vec3(0.0f, 1.0f, 0.0f));*/
-    glm::mat4 model = glm::mat4(1.0f);
+    glm::vec3 viewPos = glm::vec3(-view[3][0], -view[3][1], -view[3][2]);
 
     // Передача матриц в шейдер
     Shader::setMat4(shader, "model", model);
     Shader::setMat4(shader, "view", view);
     Shader::setMat4(shader, "projection", projection);
+    Shader::setVec3(shader, "viewPos", viewPos);
 
     // Привязка текстуры
-    Shader::setVec3(shader, "objectColor", glm::vec3(0.8f, 0.8f, 0.8f));
-    Shader::setVec3(shader, "lightPos", glm::vec3(2.0f, 3.0f, 3.0f));
-    Shader::setVec3(shader, "lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glUniform1i(glGetUniformLocation(shader, "earthTexture"), 0);
 
     // Отрисовка 
     glBindVertexArray(vao);

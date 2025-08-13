@@ -18,8 +18,8 @@ public:
 	// Утилиты для передачи данных в шейдер
 	static void setMat4(GLuint shader, const std::string& name, const glm::mat4& matrix);
 	static void setVec3(GLuint shader, const std::string& name, const glm::vec3& vector);
+	static void setFloat(GLuint shader, const std::string& name, const float& value);
 	
-
 private:
 	static std::string readFile(const std::string& path);
 	// Проверка ошибок компиляции

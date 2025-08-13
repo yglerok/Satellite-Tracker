@@ -3,6 +3,7 @@
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <vector>
+#include <string>
 
 struct Vertex {
 	glm::vec3 position;	// позиция (x, y, z) 
@@ -16,14 +17,15 @@ public:
 	Earth();
 	Earth(Earth&) = delete;
 	~Earth();
-
-	bool loadTexture();
-	void genarateSphereVertices(int segments = 32);
-	void render(const glm::mat4& view, const glm::mat4& projection, GLuint shader) const;
+	
+	void render(const glm::mat4& model, const glm::mat4& view, const glm::mat4& projection, GLuint shader) const;
 
 private:
 	std::vector<Vertex> vertices; 
 	std::vector<unsigned int> indices;
 	GLuint texture;
 	GLuint vao, vbo, ebo;
+
+	void loadTexture(const std::string& texturePath);
+	void genarateSphereVertices(int segments = 64);
 };

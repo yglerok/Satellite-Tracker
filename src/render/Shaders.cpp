@@ -47,6 +47,11 @@ void Shader::setVec3(GLuint shader, const std::string& name, const glm::vec3& ve
     glUniform3fv(glGetUniformLocation(shader, name.c_str()), 1, glm::value_ptr(vector));
 }
 
+void Shader::setFloat(GLuint shader, const std::string& name, const float& value)
+{
+    glUniform1f(glGetUniformLocation(shader, name.c_str()), value);
+}
+
 void Shader::checkCompileErrors(GLuint shader, ShaderTypes type)
 {
     GLint success;

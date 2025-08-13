@@ -13,7 +13,8 @@ add_executable(${PROJECT_NAME}
                 src/render/Earth.h
                 src/render/Earth.cpp
                 src/render/Shaders.h
-                src/render/Shaders.cpp
+                src/render/Shaders.cpp 
+                src/render/stb_image.h
 )
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
 target_include_directories(${PROJECT_NAME} PRIVATE third_party/glm)
@@ -26,6 +27,30 @@ endif()
 target_link_libraries(${PROJECT_NAME} PRIVATE 
 SDL3::SDL3 
 glad)
+
+set(IMGUI_INCLUDES 
+third_party/imgui/imgui.h 
+third_party/imgui/backends/imgui_impl_sdl3.h 
+third_party/imgui/backends/imgui_impl_opengl3.h 
+)
+
+set(IMGUI_SOURCES 
+third_party/imgui/imgui.cpp 
+third_party/imgui/backends/imgui_impl_sdl3.cpp 
+third_party/imgui/backends/imgui_impl_opengl3.cpp 
+third_party/imgui/imgui_demo.cpp 
+third_party/imgui/imgui_draw.cpp 
+third_party/imgui/imgui_widgets.cpp 
+third_party/imgui/imgui_tables.cpp 
+)
+
+add_library(ImGui STATIC ${IMGUI_INCLUDES} ${IMGUI_SOURCES})
+
+target_include_directories(ImGui PUBLIC third_party)
+target_include_directories(ImGui PUBLIC third_party/imgui)
+target_link_libraries(ImGui PRIVATE glad SDL3::SDL3)
+
+target_link_libraries(${PROJECT_NAME} PRIVATE ImGui)
 
 # set_target_properties(${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set_target_properties(${PROJECT_NAME} PROPERTIES 
