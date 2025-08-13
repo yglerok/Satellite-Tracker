@@ -23,9 +23,10 @@ public:
 private:
 	std::vector<Vertex> vertices; 
 	std::vector<unsigned int> indices;
-	GLuint texture;
+	GLuint textureDay;
+	GLuint textureNight;
 	GLuint vao, vbo, ebo;
 
-	void loadTexture(const std::string& texturePath);
+	void loadTexture(const std::string& texturePath, GLuint& texture);
 	void genarateSphereVertices(int segments = 64);
 };

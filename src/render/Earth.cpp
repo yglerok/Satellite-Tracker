@@ -15,7 +15,8 @@
 Earth::Earth()
 {
     genarateSphereVertices();
-    loadTexture("res/textures/earth.jpg");
+    loadTexture("res/textures/earth_day.jpg", textureDay);
+    loadTexture("res/textures/earth_night.jpg", textureNight);
 
     // создание vao, vbo
     glGenVertexArrays(1, &vao);
@@ -51,13 +52,14 @@ Earth::Earth()
 
 Earth::~Earth()
 {
-    glDeleteTextures(1, &texture);
+    glDeleteTextures(1, &textureDay);
+    glDeleteTextures(1, &textureNight);
     glDeleteBuffers(1, &vbo);
     glDeleteBuffers(1, &ebo);
     glDeleteVertexArrays(1, &vao);
 }
 
-void Earth::loadTexture(const std::string& texturePath)
+void Earth::loadTexture(const std::string& texturePath, GLuint& texture)
 {
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
@@ -149,8 +151,11 @@ void Earth::render(const glm::mat4& model, const glm::mat4& view, const glm::mat
 
     // Привязка текстуры
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    glUniform1i(glGetUniformLocation(shader, "earthTexture"), 0);
+    glBindTexture(GL_TEXTURE_2D, textureDay);
+    glUniform1i(glGetUniformLocation(shader, "dayEarthTexture"), 0);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, textureNight);
+    glUniform1i(glGetUniformLocation(shader, "nightEarthTexture"), 1);
 
     // Отрисовка 
     glBindVertexArray(vao);

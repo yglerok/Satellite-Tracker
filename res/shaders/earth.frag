@@ -5,10 +5,11 @@ in vec3 FragPos;
 
 out vec4 FragColor;
 
-uniform sampler2D earthTexture;
+uniform sampler2D dayEarthTexture;
+uniform sampler2D nightEarthTexture;
+uniform float nightIntensity; // Сила ночной текстуры
 uniform vec3 lightPos; // Позиция источника света (в мировых координатах)
 uniform vec3 lightColor;
-
 
 uniform float ambientStrength;
 uniform float specularStrength;
@@ -32,6 +33,16 @@ void main() {
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
     vec3 specular = specularStrength * spec * lightColor;
 
-    vec3 result = (ambient + diffuse + specular) * texture(earthTexture, UV).rgb;
+    vec3 lightning = ambient + diffuse + specular;
+
+    // Текстуры
+    vec3 dayColor = texture(dayEarthTexture, UV).rgb;
+    vec3 nightColor = texture(nightEarthTexture, UV).rgb;
+
+    // Смешивание: ночная текстура появится там, где мало света
+    float nightFactor = 1.0 - max(max(lightning.r, lightning.g), lightning.b);
+    nightFactor = pow(nightFactor, 2.0) * nightIntensity; // Усиливаем эффект
+
+    vec3 result = mix(dayColor * lightning, nightColor, nightFactor);
     FragColor = vec4(result, 1.0);
 }
