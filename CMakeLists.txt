@@ -10,7 +10,9 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 add_executable(${PROJECT_NAME} 
                 src/main.cpp
-                src/render/Earth.h
+                src/Application.h 
+                src/Application.cpp 
+                src/render/Earth.h 
                 src/render/Earth.cpp
                 src/render/Shaders.h
                 src/render/Shaders.cpp 
