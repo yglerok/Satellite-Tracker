@@ -15,6 +15,7 @@
 
 #include "render/Earth.h"
 #include "render/Shaders.h"
+#include "render/Sun.h"
 
 static struct MouseState {
 	bool isPressed = false;
@@ -23,7 +24,7 @@ static struct MouseState {
 
 struct InputParameters {
 	float ambientStrength = 0.05f, specularStrength = 0.1f;
-	float lightPos[3] = { 2.0f, 3.0f, 3.0f },
+	float //lightPos[3] = { 2.0f, 3.0f, 3.0f },
 		lightColor[3] = { 1.0f, 1.0f, 1.0f };
 	float nightTextureIntensity = 0.3f;
 };
@@ -51,6 +52,7 @@ private:
 	SDL_GLContext context;
 	GLuint shaderProgram = 0;
 	Earth* earth = nullptr;
+	Sun sun;
 
 	float currentRotationPhi = 0.0f;    // Текущий угол
 	float currentRotationTheta = 0.0f;

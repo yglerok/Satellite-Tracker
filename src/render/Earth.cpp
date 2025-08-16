@@ -48,6 +48,24 @@ Earth::Earth()
     glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
 
     glBindVertexArray(0);
+
+    generateMeridianVertices();
+
+    // Создание буферов для меридиана
+    glGenVertexArrays(1, &meridianVAO);
+    glGenBuffers(1, &meridianVBO);
+
+    glBindVertexArray(meridianVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, meridianVBO);
+    glBufferData(GL_ARRAY_BUFFER, meridianVertices.size() * sizeof(glm::vec3), meridianVertices.data(), GL_STATIC_DRAW);
+
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void*)0);
+
+    glBindVertexArray(0);
+
+    // Загрузка шейдера для линии
+    lineShader = Shader::create("res/shaders/line.vert", "res/shaders/line.frag");
 }
 
 Earth::~Earth()
@@ -57,6 +75,10 @@ Earth::~Earth()
     glDeleteBuffers(1, &vbo);
     glDeleteBuffers(1, &ebo);
     glDeleteVertexArrays(1, &vao);
+
+    glDeleteVertexArrays(1, &meridianVAO);
+    glDeleteBuffers(1, &meridianVBO);
+    glDeleteProgram(lineShader);
 }
 
 void Earth::loadTexture(const std::string& texturePath, GLuint& texture)
@@ -85,7 +107,7 @@ void Earth::loadTexture(const std::string& texturePath, GLuint& texture)
     stbi_image_free(data);
 }
 
-void Earth::genarateSphereVertices(int segments)
+void Earth::genarateSphereVertices()
 {
     // Генерация вершин
     for (int lat = 0; lat <= segments; ++lat) {
@@ -102,7 +124,7 @@ void Earth::genarateSphereVertices(int segments)
             );
             // UV-координаты 
             v.uv = glm::vec2(
-                1.0f - static_cast<float>(lon) / segments,
+                0.75f - static_cast<float>(lon) / segments,
                 static_cast<float>(lat) / segments
             );
             // нормаль = нормализованная позиция
@@ -137,6 +159,20 @@ void Earth::genarateSphereVertices(int segments)
     }
 }
 
+void Earth::generateMeridianVertices()
+{
+    const float radius = 1.01f; // Немного больше радиуса Земли
+
+    for (int i = 0; i <= segments; ++i) {
+        float theta = i * M_PI / segments;
+        meridianVertices.push_back(glm::vec3(
+            0.0f,
+            radius * cos(theta),
+            radius * sin(theta)
+        ));
+    }
+}
+
 void Earth::render(const glm::mat4& model, const glm::mat4& view, const glm::mat4& projection, GLuint shader) const
 {
     glUseProgram(shader);
@@ -161,4 +197,21 @@ void Earth::render(const glm::mat4& model, const glm::mat4& view, const glm::mat
     glBindVertexArray(vao);
     glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
+
+
+    // Отрисовка меридиана
+    //glDisable(GL_DEPTH_TEST);
+    
+    glUseProgram(lineShader);
+    Shader::setMat4(lineShader, "model", model);
+    Shader::setMat4(lineShader, "view", view);
+    Shader::setMat4(lineShader, "projection", projection);
+    Shader::setVec3(lineShader, "lineColor", glm::vec3(1.0f, 0.0f, 0.0f)); // Красный цвет
+
+    glBindVertexArray(meridianVAO);
+    glDrawArrays(GL_LINE_STRIP, 0, meridianVertices.size());
+    glBindVertexArray(0);
+
+    glUseProgram(shader);
+    //glEnable(GL_DEPTH_TEST);
 }

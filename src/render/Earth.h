@@ -27,6 +27,13 @@ private:
 	GLuint textureNight;
 	GLuint vao, vbo, ebo;
 
+	int segments = 64;
+
 	void loadTexture(const std::string& texturePath, GLuint& texture);
-	void genarateSphereVertices(int segments = 64);
+	void genarateSphereVertices();
+
+	GLuint meridianVAO, meridianVBO;
+	std::vector<glm::vec3> meridianVertices;
+	GLuint lineShader;
+	void generateMeridianVertices();
 };

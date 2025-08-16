@@ -14,6 +14,8 @@ add_executable(${PROJECT_NAME}
                 src/Application.cpp 
                 src/render/Earth.h 
                 src/render/Earth.cpp
+                src/render/Sun.h 
+                src/render/Sun.cpp 
                 src/render/Shaders.h
                 src/render/Shaders.cpp 
                 src/render/stb_image.h

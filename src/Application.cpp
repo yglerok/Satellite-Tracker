@@ -67,8 +67,14 @@ void Application::start()
 	// Создание модели Земли
 	earth = new Earth();
 
+	// Создание источника света (Солнца)
+	// Если в последствии буду передавать время в разные компоненты,
+	// сделать здесь динамическое создание
+	sun.setLightning(shaderProgram);
+
 	// Настройка OpenGL
 	glEnable(GL_DEPTH_TEST);
+	//glEnable(GL_LIGHTING);
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 
 	while (isRunning) {
@@ -166,7 +172,6 @@ void Application::update()
 	Shader::setFloat(shaderProgram, "ambientStrength", inputParams.ambientStrength);
 	Shader::setFloat(shaderProgram, "specularStrength", inputParams.specularStrength);
 	Shader::setVec3(shaderProgram, "objectColor", glm::vec3(0.8f, 0.8f, 0.8f));
-	Shader::setVec3(shaderProgram, "lightPos", glm::vec3(inputParams.lightPos[0], inputParams.lightPos[1], inputParams.lightPos[2]));
 	Shader::setVec3(shaderProgram, "lightColor", glm::vec3(inputParams.lightColor[0], inputParams.lightColor[1], inputParams.lightColor[2]));
 
 	Shader::setFloat(shaderProgram, "nightIntensity", inputParams.nightTextureIntensity);
@@ -179,7 +184,6 @@ void Application::render()
 
 	// Отрисовка Земли
 	earth->render(model, view, projection, shaderProgram);
-
 
 	ImGuiIO& io = ImGui::GetIO();
 	io.DisplaySize.x = static_cast<float>(width);
@@ -194,7 +198,7 @@ void Application::render()
 
 	ImGui::DragFloat("Ambient strength", &inputParams.ambientStrength, 0.001f, 0.0f, 0.3f);
 	ImGui::DragFloat("Specular strength", &inputParams.specularStrength, 0.01f, 0.0f, 1.0f);
-	ImGui::DragFloat3("Light position (x, y, z)", inputParams.lightPos, 0.1f, -15.0f, 15.0f);
+	//ImGui::DragFloat3("Light position (x, y, z)", inputParams.lightPos, 0.1f, -15.0f, 15.0f);
 	ImGui::ColorEdit3("Light color", inputParams.lightColor);
 
 	ImGui::End();
