@@ -18,7 +18,7 @@ public:
 	Earth(Earth&) = delete;
 	~Earth();
 	
-	void render(const glm::mat4& model, const glm::mat4& view, const glm::mat4& projection, GLuint shader) const;
+	void render(const glm::mat4& view, const glm::mat4& projection, GLuint shader) const;
 
 private:
 	std::vector<Vertex> vertices; 
@@ -36,4 +36,6 @@ private:
 	std::vector<glm::vec3> meridianVertices;
 	GLuint lineShader;
 	void generateMeridianVertices();
+
+	glm::mat4 model = glm::mat4(1.0f); // матрица модели
 };

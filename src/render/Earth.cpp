@@ -173,7 +173,7 @@ void Earth::generateMeridianVertices()
     }
 }
 
-void Earth::render(const glm::mat4& model, const glm::mat4& view, const glm::mat4& projection, GLuint shader) const
+void Earth::render(const glm::mat4& view, const glm::mat4& projection, GLuint shader) const
 {
     glUseProgram(shader);
 
@@ -202,16 +202,16 @@ void Earth::render(const glm::mat4& model, const glm::mat4& view, const glm::mat
     // Отрисовка меридиана
     //glDisable(GL_DEPTH_TEST);
     
-    glUseProgram(lineShader);
-    Shader::setMat4(lineShader, "model", model);
-    Shader::setMat4(lineShader, "view", view);
-    Shader::setMat4(lineShader, "projection", projection);
-    Shader::setVec3(lineShader, "lineColor", glm::vec3(1.0f, 0.0f, 0.0f)); // Красный цвет
+    //glUseProgram(lineShader);
+    //Shader::setMat4(lineShader, "model", model);
+    //Shader::setMat4(lineShader, "view", view);
+    //Shader::setMat4(lineShader, "projection", projection);
+    //Shader::setVec3(lineShader, "lineColor", glm::vec3(1.0f, 0.0f, 0.0f)); // Красный цвет
 
-    glBindVertexArray(meridianVAO);
-    glDrawArrays(GL_LINE_STRIP, 0, meridianVertices.size());
-    glBindVertexArray(0);
+    //glBindVertexArray(meridianVAO);
+    //glDrawArrays(GL_LINE_STRIP, 0, meridianVertices.size());
+    //glBindVertexArray(0);
 
-    glUseProgram(shader);
+    //glUseProgram(shader);
     //glEnable(GL_DEPTH_TEST);
 }

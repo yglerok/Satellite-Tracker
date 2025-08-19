@@ -1,13 +1,13 @@
 #pragma once
 
-#define _USE_MATH_DEFINES
-#include <cmath>
-
 #include <ctime>
 #include <chrono>
 
-#include <glm/glm.hpp>
 #include <glad/glad.h>
+#include <glm/glm.hpp>
+
+#define _USE_MATH_DEFINES
+#include <cmath>
 
 const double DEG_TO_RAD = M_PI / 180.0;
 const double RAD_TO_DEG = 180.0 / M_PI;

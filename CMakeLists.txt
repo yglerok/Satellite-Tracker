@@ -3,6 +3,8 @@ cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 set(PROJECT_NAME SatelliteTracker)
 project(${PROJECT_NAME})
 
+add_compile_definitions(_USE_MATH_DEFINES)
+
 add_subdirectory(third_party/SDL)
 add_subdirectory(third_party/glad)
 
@@ -12,6 +14,8 @@ add_executable(${PROJECT_NAME}
                 src/main.cpp
                 src/Application.h 
                 src/Application.cpp 
+                src/Camera.h 
+                src/Camera.cpp 
                 src/render/Earth.h 
                 src/render/Earth.cpp
                 src/render/Sun.h 

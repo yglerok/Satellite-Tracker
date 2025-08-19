@@ -12,10 +12,12 @@
 #include <imgui/backends/imgui_impl_sdl3.h>
 
 #include <string>
+#include <chrono>
 
 #include "render/Earth.h"
 #include "render/Shaders.h"
 #include "render/Sun.h"
+#include "Camera.h"
 
 static struct MouseState {
 	bool isPressed = false;
@@ -26,7 +28,7 @@ struct InputParameters {
 	float ambientStrength = 0.05f, specularStrength = 0.1f;
 	float //lightPos[3] = { 2.0f, 3.0f, 3.0f },
 		lightColor[3] = { 1.0f, 1.0f, 1.0f };
-	float nightTextureIntensity = 0.3f;
+	float nightTextureIntensity = 0.4f;
 };
 
 class Application
@@ -43,37 +45,21 @@ private:
 	std::string title;
 	int width, height;
 	bool isRunning = true;
-
+	const int FPS = 60;
+	
 	void processInput();
-	void update();
-	void render();
+	void update(double dt);
+	void render(double alpha);
 
 	SDL_Window* window = nullptr;
 	SDL_GLContext context;
 	GLuint shaderProgram = 0;
+	Camera* camera;
 	Earth* earth = nullptr;
 	Sun sun;
 
-	float currentRotationPhi = 0.0f;    // Текущий угол
-	float currentRotationTheta = 0.0f;
-	float targetRotationPhi = 0.0f;    // Целевой угол
-	float targetRotationTheta = 0.0f;
 	const float mouseSensitivity = 0.01f;
-	const float rotationInterpolationSpeed = 0.1f;
-
-	float targetRadius = 5.0f;
-	float currentRadius = 5.0f;
-	const float scaleInterpolationSpeed = 0.05f;
 
 	MouseState mouseState;
 	InputParameters inputParams;
-
-	// Матрица вида
-	glm::mat4 view;
-	// Задает перспективную проекию (имитирует человеческое зрение)
-	// Преобразует 3D-координаты в 2D-экранные с учётом перспективы 
-	// (дальние объекты выглядят меньше)
-	glm::mat4 projection;
-	// Матрица модели (вращение земли)
-	glm::mat4 model;
 };

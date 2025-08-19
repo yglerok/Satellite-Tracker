@@ -6,20 +6,10 @@
 Application::Application(const char* appTitle, int appWidth, int appHeight) :
 	title(appTitle), width(appWidth), height(appHeight)
 {
-	view = glm::lookAt(
-		glm::vec3(5.0f, 0.0f, 5.0f),	// позици€ камеры
-		glm::vec3(0.0f, 0.0f, 0.0f),	// направление взгл€да (точка, в которую смотрит камера)
-		glm::vec3(0.0f, 1.0f, 0.0f)		// вектор "вверх" (обычно (0, 1, 0))
-	);
-
-	projection = glm::perspective(
-		glm::radians(45.0f),	// угол обзора (FOV) (45-90 град)
-		float(width) / float(height),		// соотношение сторон (ширина / высота)
-		0.1f,					// ближн€€ плоскость отсечени€ 
-		100.0f					// дальн€€ плоскость отсечени€
-	);
-
-	model = glm::mat4(1.0f);
+	camera = new Camera(width, height);
+	if (!camera) {
+		std::cerr << "Failed to create camera" << std::endl;
+	}
 }
 
 bool Application::init()
@@ -77,19 +67,39 @@ void Application::start()
 	//glEnable(GL_LIGHTING);
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 
+	auto previousTime = std::chrono::steady_clock::now();
+	double lag = 0.0;
+	constexpr double fixed_dt = 1.0 / 60.0; // ‘иксированный шаг дл€ обновлени€ физики
+
+	SDL_GL_SetSwapInterval(1); // ¬ключаем vsync
+
 	while (isRunning) {
+		auto currentTime = std::chrono::steady_clock::now();
+		auto elapsedTime = currentTime - previousTime;
+		previousTime = currentTime;
+		lag += std::chrono::duration<double>(elapsedTime).count();
+
 		processInput();
 
-		update();
+		// ‘иксированное обновление физики (максимум 5 раз за кадр)
+		int updateCount = 0;
+		while (lag >= fixed_dt && updateCount < 5) {
+			update(fixed_dt);
+			lag -= fixed_dt;
+			updateCount++;
+		}
+		
+		// »нтерпол€ци€ дл€ более плавного рендера
+		double alpha = lag / fixed_dt;
+		render(alpha);
 
-		render();
-
-		SDL_Delay(16);
+		SDL_GL_SwapWindow(window);
 	}
 }
 
 void Application::shutdown()
 {
+	delete camera;
 	delete earth;
 	glDeleteProgram(shaderProgram);
 	SDL_GL_DestroyContext(context);
@@ -108,8 +118,7 @@ void Application::processInput()
 			isRunning = false;
 			break;
 		case SDL_EVENT_MOUSE_WHEEL:
-			targetRadius -= event.wheel.y * 0.5;
-			targetRadius = glm::clamp(targetRadius, 2.0f, 15.0f);
+			camera->increaseRadius(event.wheel.y);
 			break;
 		case SDL_EVENT_MOUSE_BUTTON_DOWN:
 			if (event.button.button == SDL_BUTTON_RIGHT) {
@@ -129,10 +138,8 @@ void Application::processInput()
 			float dx = event.motion.x - mouseState.prevX;
 			float dy = event.motion.y - mouseState.prevY;
 
-			targetRotationPhi -= dx * mouseSensitivity;
-			targetRotationTheta += dy * mouseSensitivity;
-
-			targetRotationTheta = glm::clamp(targetRotationTheta, -1.4f, 1.4f);
+			camera->increasePhi(dx * mouseSensitivity);
+			camera->increaseTheta(dy * mouseSensitivity);
 
 			mouseState.prevX = event.motion.x;
 			mouseState.prevY = event.motion.y;
@@ -140,8 +147,7 @@ void Application::processInput()
 		}
 		case SDL_EVENT_KEY_DOWN:
 			if (event.key.scancode == SDL_SCANCODE_R) {
-				targetRotationTheta = 0.0f;
-				targetRotationPhi = 0.0f;
+				camera->reset();
 			}
 			break;
 		default:
@@ -151,22 +157,9 @@ void Application::processInput()
 	}
 }
 
-void Application::update()
+void Application::update(double dt)
 {
-	currentRotationPhi = glm::mix(currentRotationPhi, targetRotationPhi, rotationInterpolationSpeed);
-	currentRotationTheta = glm::mix(currentRotationTheta, targetRotationTheta, rotationInterpolationSpeed);
-	currentRadius = glm::mix(currentRadius, targetRadius, scaleInterpolationSpeed);
-
-	float camX = cos(currentRotationTheta) * sin(currentRotationPhi) * currentRadius;
-	float camZ = cos(currentRotationTheta) * cos(currentRotationPhi) * currentRadius;
-	float camY = sin(currentRotationTheta) * currentRadius;
-
-	view = glm::lookAt(
-		glm::vec3(camX, camY, camZ),	
-		glm::vec3(0.0f, 0.0f, 0.0f),	
-		glm::vec3(0.0f, 1.0f, 0.0f)		
-	);
-
+	camera->update(dt);
 	
 	// Ќастройка освещени€
 	Shader::setFloat(shaderProgram, "ambientStrength", inputParams.ambientStrength);
@@ -177,13 +170,26 @@ void Application::update()
 	Shader::setFloat(shaderProgram, "nightIntensity", inputParams.nightTextureIntensity);
 }
 
-void Application::render()
+void Application::render(double alpha)
 {
 	// ќчистка буферов
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	
+	// »нтерпол€ци€ позиции камеры дл€ плавности
+	//glm::vec3 renderCameraPos = prevCameraPosition +
+	//	(currentCameraPosition - prevCameraPosition) * alpha;
+
+	//// ќбновл€ем view матрицу с интерполированной позицией
+	//glm::mat4 interpolatedView = glm::lookAt(
+	//	renderCameraPos,
+	//	glm::vec3(0.0f, 0.0f, 0.0f),
+	//	glm::vec3(0.0f, 1.0f, 0.0f)
+	//);
+
+	camera->render(alpha);
 
 	// ќтрисовка «емли
-	earth->render(model, view, projection, shaderProgram);
+	earth->render(camera->getView(), camera->getProjection(), shaderProgram);
 
 	ImGuiIO& io = ImGui::GetIO();
 	io.DisplaySize.x = static_cast<float>(width);
@@ -209,6 +215,4 @@ void Application::render()
 
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
-	SDL_GL_SwapWindow(window);
 }
