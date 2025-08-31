@@ -24,7 +24,7 @@ public:
 
 private:
 	std::string cleanTleLine(const std::string& line);
-	bool isTleLineValid(int lineNumber, const std::string& line);
+	//bool isTleLineValid(int lineNumber, const std::string& line);
 
 	//bool validateChecksum(const std::string& line);
 	//int calculateChecksum(const std::string& line);

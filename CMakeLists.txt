@@ -29,8 +29,15 @@ add_executable(${PROJECT_NAME}
                 src/data/TleParser.cpp
                 src/data/DataManager.h 
                 src/data/DataManager.cpp
+                src/data/GroupManager.h
+                src/data/GroupManager.cpp
+
+
+                # SGP4
+                third_party/sgp4/src/cpp/SGP4.h
+                third_party/sgp4/src/cpp/SGP4.c
 )
-target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
+target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
 target_include_directories(${PROJECT_NAME} PRIVATE 
 third_party/glm
 )
@@ -51,6 +58,7 @@ if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/third_party/SDL/CMakeLists.txt")
     message(FATAL_ERROR "SDL3 submodule not found. Run: git submodule update --init --recursive")
 endif()
 
+# SQLite 3
 set(SQLITE3_INCLUDES
 third_party/sqlite/sqlite3.h
 )

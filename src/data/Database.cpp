@@ -34,9 +34,9 @@ bool Database::createTables()
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			norad_id INTEGER NOT NULL,
 			group_name TEXT NOT NULL,
-			FOREIGN KEY (norad_id) REFERENCES satellite (norad_id) ON DELETE CASCADE,
+			FOREIGN KEY (norad_id) REFERENCES satellites (norad_id) ON DELETE CASCADE,
 			UNIQUE(norad_id, group_name)
-		);
+		);			
 
 		CREATE INDEX IF NOT EXISTS idx_satellites_norad ON satellites(norad_id);
         CREATE INDEX IF NOT EXISTS idx_satellites_epoch ON satellites(epoch);
@@ -56,7 +56,7 @@ bool Database::insertSatellite(const SatelliteTle& satellite)
 	sqlite3_stmt* stmt;
 	int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr);
 	if (rc != SQLITE_OK) {
-		std::cerr << "Failed to prepair statement: " << sqlite3_errmsg(db) << std::endl;
+		std::cerr << "[insertSatellite] Failed to prepair statement: " << sqlite3_errmsg(db) << std::endl;
 		return false;
 	}
 
@@ -80,7 +80,7 @@ bool Database::updateSatellite(const SatelliteTle& satellite)
 	sqlite3_stmt* stmt;
 	int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr);
 	if (rc != SQLITE_OK) {
-		std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(db) << std::endl;
+		std::cerr << "[updateSatellite] Failed to prepare statement: " << sqlite3_errmsg(db) << std::endl;
 		return false;
 	}
 		
@@ -103,7 +103,7 @@ bool Database::deleteSatellite(int noradId)
 	sqlite3_stmt* stmt;
 	int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr);
 	if (rc != SQLITE_OK) {
-		std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(db) << std::endl;
+		std::cerr << "[deleteSatellite] Failed to prepare statement: " << sqlite3_errmsg(db) << std::endl;
 		return false;
 	}
 
@@ -123,7 +123,7 @@ std::optional<SatelliteTle> Database::getSatelliteByNoradId(int noradId)
 	sqlite3_stmt* stmt;
 	int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr);
 	if (rc != SQLITE_OK) {
-		std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(db) << std::endl;
+		std::cerr << "[getSatelliteByNoradId] Failed to prepare statement: " << sqlite3_errmsg(db) << std::endl;
 		return std::nullopt;
 	}
 
@@ -153,7 +153,7 @@ std::vector<SatelliteTle> Database::getAllSatellites()
 	sqlite3_stmt* stmt;
 	int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr);
 	if (rc != SQLITE_OK) {
-		std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(db) << std::endl;
+		std::cerr << "[getAllSatellites] Failed to prepare statement: " << sqlite3_errmsg(db) << std::endl;
 		return satellites;
 	}
 
@@ -173,7 +173,48 @@ std::vector<SatelliteTle> Database::getAllSatellites()
 	return satellites;
 }
 
-std::vector<SatelliteTle> Database::getSatellitesByGroups(const std::string& group)
+bool Database::deleteGroup(const std::string& groupName)
+{
+	const char* sql = "DELETE FROM satellite_groups WHERE group_name = ?";
+
+	sqlite3_stmt* stmt;
+	int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr);
+	if (rc != SQLITE_OK) {
+		std::cerr << "[deleteGroup] Failed to prepare statement: " << sqlite3_errmsg(db) << std::endl;
+		return false;
+	}
+
+	sqlite3_bind_text(stmt, 1, groupName.c_str(), -1, SQLITE_STATIC);
+
+	rc = sqlite3_step(stmt);
+	sqlite3_finalize(stmt);
+
+	return rc == SQLITE_DONE;
+}
+
+std::vector<std::string> Database::getAllGroups()
+{
+	std::vector<std::string> groups;
+	const char* sql = "SELECT DISTINCT group_name FROM satellite_groups ORDER BY group_name";
+
+	sqlite3_stmt* stmt;
+	int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr);
+	if (rc != SQLITE_OK) {
+		std::cerr << "[getAllGroups] Failed to prepare statement: " << sqlite3_errmsg(db) << std::endl;
+		return groups;
+	}
+
+	while (sqlite3_step(stmt) == SQLITE_ROW) {
+		const char* groupName = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
+		if (groupName)
+			groups.push_back(groupName);
+	}
+
+	sqlite3_finalize(stmt);
+	return groups;
+}
+
+std::vector<SatelliteTle> Database::getSatellitesByGroup(const std::string& group)
 {
 	std::vector<SatelliteTle> satellites;
 	const char* sql = R"(SELECT s.id, s.name, s.norad_id, s.tle_line1, s.tle_line2, s.epoch
@@ -185,7 +226,7 @@ std::vector<SatelliteTle> Database::getSatellitesByGroups(const std::string& gro
 	sqlite3_stmt* stmt;
 	int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr);
 	if (rc != SQLITE_OK) {
-		std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(db) << std::endl;
+		std::cerr << "[getSatellitesByGroup] Failed to prepare statement: " << sqlite3_errmsg(db) << std::endl;
 		return satellites;
 	}
 
@@ -246,7 +287,7 @@ bool Database::addSatelliteToGroup(int noradId, const std::string& group)
 	sqlite3_stmt* stmt;
 	int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr);
 	if (rc != SQLITE_OK) {
-		std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(db) << std::endl;
+		std::cerr << "[addSatelliteToGroup] Failed to prepare statement: " << sqlite3_errmsg(db) << std::endl;
 		return false;
 	}
 
@@ -266,7 +307,7 @@ bool Database::removeSatelliteFromGroup(int noradId, const std::string& group)
 	sqlite3_stmt* stmt;
 	int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr);
 	if (rc != SQLITE_DONE) {
-		std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(db) << std::endl;
+		std::cerr << "[removeSatelliteFromGroup] Failed to prepare statement: " << sqlite3_errmsg(db) << std::endl;
 		return false;
 	}
 
@@ -288,7 +329,7 @@ std::vector<std::string> Database::getSatelliteGroups(int noradId)
 	sqlite3_stmt* stmt;
 	int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr);
 	if (rc != SQLITE_OK) {
-		std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(db) << std::endl;
+		std::cerr << "[getSatelliteGroups] Failed to prepare statement: " << sqlite3_errmsg(db) << std::endl;
 		return groups;
 	}
 
@@ -298,6 +339,39 @@ std::vector<std::string> Database::getSatelliteGroups(int noradId)
 
 	sqlite3_finalize(stmt);
 	return groups;
+}
+
+std::optional<std::chrono::system_clock::time_point> Database::getLastUpdateTime()
+{
+	const char* sql = "SELECT MAX(last_update) FROM satellites";
+
+	sqlite3_stmt* stmt;
+	int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr);
+	if (rc != SQLITE_OK) {
+		std::cerr << "[getLastUpdateTime] Failed to prepare statement: " << sqlite3_errmsg(db) << std::endl;
+		return std::nullopt;
+	}
+
+	std::optional<std::chrono::system_clock::time_point> result;
+	if (sqlite3_step(stmt) == SQLITE_ROW) {
+		const char* timeStr = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
+		if (timeStr) {
+			try {
+				std::istringstream ss(timeStr);
+				std::chrono::sys_time<std::chrono::system_clock::duration> tp;
+				ss >> std::chrono::parse("%F %T", tp);
+
+				if (!ss.fail()) {
+					result = tp;
+				}
+			} catch (const std::exception& ex) {
+				std::cerr << "Failed to parse time: " << ex.what() << std::endl;
+			}
+		}
+	}
+
+	sqlite3_finalize(stmt);
+	return result;
 }
 
 bool Database::open()

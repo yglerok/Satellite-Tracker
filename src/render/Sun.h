@@ -24,7 +24,7 @@ private:
 	bool getLocalTime(const time_t* time, struct tm* result); // кроссплатформенная реализация localtime()
 	std::tm getUtcTime( time_t time);
 	double getJulianDate(); // Расчёт юлианской даты (JD)
-	double getEclipticLongitude(const double& mjd); // Расчёт эклиптической долготы Солнца
+	double getEclipticLongitude(const double& jd); // Расчёт эклиптической долготы Солнца
 	void getEquatorialCoords(double lambda, double beta, double epsilon,
 		double& ra, double& dec); // Переход в экваториальные координаты
 	glm::vec3 getDirection(); // Получение вектора направления на Солнце

@@ -4,6 +4,9 @@
 #include <string>
 #include <vector>
 #include <optional>
+#include <chrono>
+#include <sstream>
+#include <ctime>
 
 struct SatelliteTle {
 	int id;
@@ -12,6 +15,12 @@ struct SatelliteTle {
 	std::string tleLine1;
 	std::string tleLine2;
 	std::string epoch;
+};
+
+struct SatelliteGroup {
+	std::string name;
+	std::vector<int> noradIds;
+	bool isVisible = true;
 };
 
 class Database
@@ -23,20 +32,34 @@ public:
 	bool isOpen() const;
 
 	bool createTables();
+
+	// Работа со спутниками
 	bool insertSatellite(const SatelliteTle& satellite);
 	bool updateSatellite(const SatelliteTle& satellite);
 	bool deleteSatellite(int noradId);
-
-	std::optional<SatelliteTle> getSatelliteByNoradId(int noradId);
+	
 	std::vector<SatelliteTle> getAllSatellites();
-	std::vector<SatelliteTle> getSatellitesByGroups(const std::string& group);
+	
+	std::optional<SatelliteTle> getSatelliteByNoradId(int noradId);
+	std::vector<SatelliteTle> getSatellitesByGroup(const std::string& group);
 
 	int getSatelliteCount();
 	bool clearAllData();
 
+	// Работа с группами
+	//bool createGroup(const std::string& groupName);
+	bool deleteGroup(const std::string& groupName);
+	std::vector<std::string> getAllGroups();
+
 	bool addSatelliteToGroup(int noradId, const std::string& group);
 	bool removeSatelliteFromGroup(int noradId, const std::string& group);
 	std::vector<std::string> getSatelliteGroups(int noradId);
+
+	std::optional<std::chrono::system_clock::time_point> getLastUpdateTime();
+
+	bool beginTransaction();
+	bool commitTransaction();
+	bool rollbackTransaction();
 
 protected:
 	bool open();
@@ -44,9 +67,6 @@ protected:
 
 private:
 	bool executeSQL(const std::string& sql);
-	bool beginTransaction();
-	bool commitTransaction();
-	bool rollbackTransaction();
 
 	std::string dbPath;
 	sqlite3* db = nullptr;

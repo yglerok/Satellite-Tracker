@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <cmath>
+#include <filesystem>
 
 Application::Application(const char* appTitle, int appWidth, int appHeight) :
 	title(appTitle), width(appWidth), height(appHeight)
@@ -51,6 +52,18 @@ bool Application::init()
 
 void Application::start()
 {
+	std::filesystem::create_directories("data");
+	std::filesystem::create_directories("data/backups");
+
+	const std::string dbPath = "data/satellites.db";
+	const std::string backupPath = "data/backups/celestrak_backup.tle";
+
+	dataManager = std::make_unique<DataManager>(dbPath);
+	if (!dataManager->initialize()) {
+		std::cerr << "Failed to initialize DataManager!" << std::endl;
+		return;
+	}
+
 	// Загрузка шейдера
 	shaderProgram = Shader::create("res/shaders/earth.vert", "res/shaders/earth.frag");
 
@@ -61,6 +74,9 @@ void Application::start()
 	// Если в последствии буду передавать время в разные компоненты,
 	// сделать здесь динамическое создание
 	sun.setLightning(shaderProgram);
+
+	// Загрузка и сортировка спутников
+	loadDataFromDatabase(backupPath);
 
 	// Настройка OpenGL
 	glEnable(GL_DEPTH_TEST);
@@ -215,4 +231,24 @@ void Application::render(double alpha)
 
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}
+
+void Application::loadDataFromDatabase(const std::string& backupPath)
+{
+	auto updateResult = dataManager->updateTleData(backupPath);
+
+	if (updateResult == DataManager::UpdateResult::SuccessFromNetwork ||
+		updateResult == DataManager::UpdateResult::SuccessFromFile) {
+		if (!dataManager->sortSatellitesIntoGroups()) {
+			std::cerr << "Failed to sort satellites into groups" << std::endl;
+			return;
+		}
+	}
+
+	auto groups = dataManager->getAllGroupNames();
+	std::cout << "Available groups: " << groups.size() << std::endl;
+	for (const auto& group : groups) {
+		auto satellites = dataManager->getSatellitesByGroup(group);
+		std::cout << "Group " << group << ": " << satellites.size() << " satellites" << std::endl;
+	}
 }

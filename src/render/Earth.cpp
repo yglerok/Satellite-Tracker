@@ -201,7 +201,7 @@ void Earth::render(const glm::mat4& view, const glm::mat4& projection, GLuint sh
 
     // Отрисовка меридиана
     //glDisable(GL_DEPTH_TEST);
-    
+    //
     //glUseProgram(lineShader);
     //Shader::setMat4(lineShader, "model", model);
     //Shader::setMat4(lineShader, "view", view);

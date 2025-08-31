@@ -19,6 +19,8 @@
 #include "render/Sun.h"
 #include "Camera.h"
 
+#include "data/DataManager.h"
+
 static struct MouseState {
 	bool isPressed = false;
 	float prevX = 0.0f, prevY = 0.0f;
@@ -62,4 +64,7 @@ private:
 
 	MouseState mouseState;
 	InputParameters inputParams;
+
+	std::unique_ptr<DataManager> dataManager;
+	void loadDataFromDatabase(const std::string& backupPath);
 };
