@@ -16,6 +16,8 @@ add_executable(${PROJECT_NAME}
                 src/Application.cpp 
                 src/Camera.h 
                 src/Camera.cpp 
+                src/TimeManager.h
+                src/TimeManager.cpp
                 src/render/Earth.h 
                 src/render/Earth.cpp
                 src/render/Sun.h 
@@ -31,15 +33,16 @@ add_executable(${PROJECT_NAME}
                 src/data/DataManager.cpp
                 src/data/GroupManager.h
                 src/data/GroupManager.cpp
-
-
-                # SGP4
-                third_party/sgp4/src/cpp/SGP4.h
-                third_party/sgp4/src/cpp/SGP4.c
+                src/satellitesManagement/SatelliteManager.h
+                src/satellitesManagement/SatelliteManager.cpp
+                src/satellitesManagement/Sgp4Model.h
+                src/satellitesManagement/Sgp4Model.cpp
+                src/satellitesManagement/Sgp4ModelFactory.h
 )
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
 target_include_directories(${PROJECT_NAME} PRIVATE 
-third_party/glm
+third_party/glm 
+third_party/sgp4/src/cpp
 )
 
 # curl
@@ -85,10 +88,17 @@ else()
     target_compile_options(sqlite3 PRIVATE -w)
 endif()
 
+# SGP4
+add_library(sgp4 STATIC
+    third_party/sgp4/src/cpp/SGP4.c
+)
+target_include_directories(sgp4 PUBLIC third_party/sgp4/src/cpp)
+
 target_link_libraries(${PROJECT_NAME} PRIVATE 
 SDL3::SDL3 
 glad 
 sqlite3
+sgp4
 )
 
 set(IMGUI_INCLUDES 

@@ -18,9 +18,10 @@ public:
 	bool validateTleLine(const std::string& line, int lineNumber);
 	bool validateTleBlock(const std::string& line0, const std::string& line1, const std::string& line2);
 
-	int extractNoradIdFromLine2(const std::string& line2);
+	static int extractNoradIdFromLine2(const std::string& line2);
 	std::string extractEpochFromLine1(const std::string& line1);
 	std::string extractNameFromLine0(const std::string& line0);
+
 
 private:
 	std::string cleanTleLine(const std::string& line);

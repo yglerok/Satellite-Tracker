@@ -5,7 +5,7 @@
 
 glm::vec3 Sun::getDirection()
 {
-    double jd = getJulianDate();
+    double jd = timeManager->getJulianDate();
     std::cout << jd << std::endl;
 
     // Вычисляем эклиптическую долготу Солнца
@@ -40,12 +40,20 @@ glm::vec3 Sun::getDirection()
     // Z астро -> Y сцены (вверх)
 
     glm::vec3 sceneDir = glm::vec3(
-        dir.y,  // восток
+        dir.x,  // восток
         dir.z,  // вверх (северный полюс)
-        -dir.x  // север (весеннее равноденствие -> юг)
+        -dir.y  // север (весеннее равноденствие -> юг)
     );
 
-    return sceneDir * distance;
+    std::cout << "sceneDir: " << glm::normalize(sceneDir).x << ", "
+        << glm::normalize(sceneDir).y << ", " << glm::normalize(sceneDir).z << std::endl;
+
+    return glm::normalize(sceneDir);
+}
+
+Sun::Sun(std::shared_ptr<TimeManager> timeManager)
+{
+    this->timeManager = timeManager;
 }
 
 void Sun::setLightning(GLuint shaderProgram)
@@ -53,74 +61,7 @@ void Sun::setLightning(GLuint shaderProgram)
     glm::vec3 lightPos = getDirection();
     std::cout << "Sun direction: " << lightPos.x << ", " << lightPos.y << ", " << lightPos.z << std::endl;
     glUseProgram(shaderProgram);
-    Shader::setVec3(shaderProgram, "lightPos", lightPos);
-}
-
-bool Sun::getLocalTime(const time_t* time, struct tm* result)
-{
-    if (!time || !result)
-        return false;
-
-    #if defined (_WIN32)
-        return (localtime_s(result, time) == 0); // Windows
-    #else
-        // Linux/macOS (POSIX)
-        std::tm* tmp = std::localtime(time);
-        if (!tmp)
-            return false;
-        *result = *tmp;
-        return true;
-    #endif
-}
-
-std::tm Sun::getUtcTime(time_t time)
-{
-    std::tm tm_utc;
-
-#if defined(_WIN32)
-    gmtime_s(&tm_utc, &time); // Windows
-#else
-    tm_utc = *gmtime(&time); // Linux/macOS (POSIX)
-#endif
-
-    return tm_utc;
-}
-
-double Sun::getJulianDate()
-{
-    auto now = std::chrono::system_clock::now();
-    time_t currentTime = std::chrono::system_clock::to_time_t(now);
-    std::tm tm = getUtcTime(currentTime);
-
-    int year = 1900 + tm.tm_year;
-    int month = 1 + tm.tm_mon;
-    int day = tm.tm_mday;
-    int hour = tm.tm_hour; 
-    int minute = tm.tm_min;
-    int second = tm.tm_sec;
-
-    std::cout << day << "." << month << "." << year <<
-        " " << hour << ":" << minute << ":" << second << std::endl;
-
-    if (month <= 2) { // в юлианском календаре год начинается с марта
-        year--;
-        month += 12;
-    }
-    int a = year / 100; // количество полных столетий с начала эпохи
-    int b = 2 - a + a / 4; // поправка для перехода от юлианского к григорианскому календарю
-
-    // 4716 — сдвиг эпохи (4716 год до н.э. = год 0 в астрономии)
-    // 365.25 — средняя длина года с учётом високосных лет
-    // 30.6001 — средняя длина месяца
-    // month + 1 — коррекция для правильного учёта месяцев
-    // 1524.5 — сдвиг для согласования с астрономической эпохой
-    //double jd = floor(365.25 * (year + 4716)) + floor(30.6001 * (month + 1)) + day + b - 1524.5;
-    //jd += (hour + minute / 60.0 + second / 3600.0) / 24.0;
-    double jd = 367 * year - floor(7 * (year + floor((month + 9) / 12)) / 4)
-        + floor(275 * month / 9) + day + 1721013.5
-        + (hour + minute / 60.0 + second / 3600.0) / 24.0;
-    
-    return jd;
+    Shader::setVec3(shaderProgram, "lightDir", lightPos);
 }
 
 double Sun::getEclipticLongitude(const double& jd)

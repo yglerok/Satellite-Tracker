@@ -38,4 +38,11 @@ private:
 	void generateMeridianVertices();
 
 	glm::mat4 model = glm::mat4(1.0f); // матрица модели
+
+	// Оси
+	GLuint axesVAO, axesVBO;
+	std::vector<glm::vec3> axesVertices;
+	GLuint axesShader;
+	void generateAxesVertices();
+	void renderAxes(const glm::mat4& view, const glm::mat4& projection) const;
 };

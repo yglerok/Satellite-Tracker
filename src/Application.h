@@ -17,7 +17,9 @@
 #include "render/Earth.h"
 #include "render/Shaders.h"
 #include "render/Sun.h"
+
 #include "Camera.h"
+#include "TimeManager.h"
 
 #include "data/DataManager.h"
 
@@ -58,7 +60,7 @@ private:
 	GLuint shaderProgram = 0;
 	Camera* camera;
 	Earth* earth = nullptr;
-	Sun sun;
+	std::unique_ptr<Sun> sun;
 
 	const float mouseSensitivity = 0.01f;
 
@@ -67,4 +69,6 @@ private:
 
 	std::unique_ptr<DataManager> dataManager;
 	void loadDataFromDatabase(const std::string& backupPath);
+
+	std::shared_ptr<TimeManager> timeManager;
 };

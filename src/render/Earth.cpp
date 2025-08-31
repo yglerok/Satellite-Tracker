@@ -49,23 +49,43 @@ Earth::Earth()
 
     glBindVertexArray(0);
 
-    generateMeridianVertices();
+    //generateMeridianVertices();
 
-    // Создание буферов для меридиана
-    glGenVertexArrays(1, &meridianVAO);
-    glGenBuffers(1, &meridianVBO);
+    //// Создание буферов для меридиана
+    //glGenVertexArrays(1, &meridianVAO);
+    //glGenBuffers(1, &meridianVBO);
 
-    glBindVertexArray(meridianVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, meridianVBO);
-    glBufferData(GL_ARRAY_BUFFER, meridianVertices.size() * sizeof(glm::vec3), meridianVertices.data(), GL_STATIC_DRAW);
+    //glBindVertexArray(meridianVAO);
+    //glBindBuffer(GL_ARRAY_BUFFER, meridianVBO);
+    //glBufferData(GL_ARRAY_BUFFER, meridianVertices.size() * sizeof(glm::vec3), meridianVertices.data(), GL_STATIC_DRAW);
+
+    //glEnableVertexAttribArray(0);
+    //glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void*)0);
+
+    //glBindVertexArray(0);
+
+    //// Загрузка шейдера для линии
+    //lineShader = Shader::create("res/shaders/line.vert", "res/shaders/line.frag");
+
+    // Генерация осей
+    generateAxesVertices();
+
+    // Создание буферов для осей
+    glGenVertexArrays(1, &axesVAO);
+    glGenBuffers(1, &axesVBO);
+
+    glBindVertexArray(axesVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, axesVBO);
+    glBufferData(GL_ARRAY_BUFFER, axesVertices.size() * sizeof(glm::vec3),
+        axesVertices.data(), GL_STATIC_DRAW);
 
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void*)0);
 
     glBindVertexArray(0);
 
-    // Загрузка шейдера для линии
-    lineShader = Shader::create("res/shaders/line.vert", "res/shaders/line.frag");
+    // Загрузка шейдера для осей
+    axesShader = Shader::create("res/shaders/line.vert", "res/shaders/line.frag");
 }
 
 Earth::~Earth()
@@ -79,6 +99,10 @@ Earth::~Earth()
     glDeleteVertexArrays(1, &meridianVAO);
     glDeleteBuffers(1, &meridianVBO);
     glDeleteProgram(lineShader);
+
+    glDeleteVertexArrays(1, &axesVAO);
+    glDeleteBuffers(1, &axesVBO);
+    glDeleteProgram(axesShader);
 }
 
 void Earth::loadTexture(const std::string& texturePath, GLuint& texture)
@@ -173,8 +197,54 @@ void Earth::generateMeridianVertices()
     }
 }
 
+void Earth::generateAxesVertices()
+{
+    const float axisLength = 1.5f; // Длина осей (больше радиуса Земли)
+
+    // Ось X (Красная) - Восток/Запад
+    axesVertices.push_back(glm::vec3(0.0f, 0.0f, 0.0f));
+    axesVertices.push_back(glm::vec3(axisLength, 0.0f, 0.0f));
+
+    // Ось Y (Зеленая) - Вверх/Вниз (Северный/Южный полюс)
+    axesVertices.push_back(glm::vec3(0.0f, 0.0f, 0.0f));
+    axesVertices.push_back(glm::vec3(0.0f, axisLength, 0.0f));
+
+    // Ось Z (Синяя) - Север/Юг
+    axesVertices.push_back(glm::vec3(0.0f, 0.0f, 0.0f));
+    axesVertices.push_back(glm::vec3(0.0f, 0.0f, axisLength));
+}
+
+void Earth::renderAxes(const glm::mat4& view, const glm::mat4& projection) const
+{
+    glUseProgram(axesShader);
+
+    // Передача матриц
+    Shader::setMat4(axesShader, "model", model);
+    Shader::setMat4(axesShader, "view", view);
+    Shader::setMat4(axesShader, "projection", projection);
+
+    // Ось X (Красная) - Восток/Запад
+    Shader::setVec3(axesShader, "color", glm::vec3(1.0f, 0.0f, 0.0f));
+    glBindVertexArray(axesVAO);
+    glDrawArrays(GL_LINES, 0, 2);
+
+    // Ось Y (Зеленая) - Северный/Южный полюс
+    Shader::setVec3(axesShader, "color", glm::vec3(0.0f, 1.0f, 0.0f));
+    glDrawArrays(GL_LINES, 2, 2);
+
+    // Ось Z (Синяя) - Север/Юг
+    Shader::setVec3(axesShader, "color", glm::vec3(0.0f, 0.0f, 1.0f));
+    glDrawArrays(GL_LINES, 4, 2);
+
+    glBindVertexArray(0);
+}
+
 void Earth::render(const glm::mat4& view, const glm::mat4& projection, GLuint shader) const
 {
+    glDisable(GL_DEPTH_TEST);
+    renderAxes(view, projection);
+    glEnable(GL_DEPTH_TEST);
+
     glUseProgram(shader);
 
     glm::vec3 viewPos = glm::vec3(-view[3][0], -view[3][1], -view[3][2]);
@@ -197,6 +267,7 @@ void Earth::render(const glm::mat4& view, const glm::mat4& projection, GLuint sh
     glBindVertexArray(vao);
     glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
+    
 
 
     // Отрисовка меридиана

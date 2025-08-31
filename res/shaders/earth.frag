@@ -8,7 +8,8 @@ out vec4 FragColor;
 uniform sampler2D dayEarthTexture;
 uniform sampler2D nightEarthTexture;
 uniform float nightIntensity; // Сила ночной текстуры
-uniform vec3 lightPos; // Позиция источника света (в мировых координатах)
+//uniform vec3 lightPos; // Позиция источника света (в мировых координатах)
+uniform vec3 lightDir;
 uniform vec3 lightColor;
 
 uniform float ambientStrength;
@@ -17,13 +18,16 @@ uniform vec3 viewPos;
 //uniform vec3 objectColor;
 
 void main() {
+    // Правильное направление света: ОТ солнца К фрагменту
+    //vec3 lightDir = normalize(FragPos - lightPos);
+
     // Ambient освещение (фоновый свет)
     //float ambientStrength = 0.1;
     vec3 ambient = ambientStrength * lightColor;
 
     // Диффузное освещение
     vec3 norm = normalize(Normal);
-    vec3 lightDir = normalize(lightPos - FragPos);
+    //vec3 lightDir = normalize(lightPos - FragPos);
     float diff = max(dot(norm, lightDir), 0.0);
     vec3 diffuse = diff * lightColor;
 

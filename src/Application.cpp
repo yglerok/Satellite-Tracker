@@ -52,6 +52,9 @@ bool Application::init()
 
 void Application::start()
 {
+	// Создание менеджера времени
+	timeManager = std::make_shared<TimeManager>();
+
 	std::filesystem::create_directories("data");
 	std::filesystem::create_directories("data/backups");
 
@@ -73,7 +76,8 @@ void Application::start()
 	// Создание источника света (Солнца)
 	// Если в последствии буду передавать время в разные компоненты,
 	// сделать здесь динамическое создание
-	sun.setLightning(shaderProgram);
+	sun = std::make_unique<Sun>(timeManager);
+	sun->setLightning(shaderProgram);
 
 	// Загрузка и сортировка спутников
 	loadDataFromDatabase(backupPath);
@@ -175,6 +179,8 @@ void Application::processInput()
 
 void Application::update(double dt)
 {
+	timeManager->update(dt);
+
 	camera->update(dt);
 	
 	// Настройка освещения
@@ -225,8 +231,8 @@ void Application::render(double alpha)
 
 	ImGui::End();
 
-	ImGui::Begin("Texture settings", 0, ImGuiWindowFlags_AlwaysAutoResize);
-	ImGui::DragFloat("Night Intensity", &inputParams.nightTextureIntensity, 0.01f, 0.0f, 2.0f);
+	ImGui::Begin("Time", 0, ImGuiWindowFlags_AlwaysAutoResize);
+	ImGui::Text(timeManager->getStringCurrentTime().c_str());
 	ImGui::End();
 
 	ImGui::Render();
