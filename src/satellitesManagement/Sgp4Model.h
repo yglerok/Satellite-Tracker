@@ -3,6 +3,7 @@
 #include <glm/glm.hpp>
 #include <memory>
 #include <string>
+#include <iostream>
 
 #include "../third_party/sgp4/src/cpp/SGP4.h"
 

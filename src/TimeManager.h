@@ -11,16 +11,20 @@ public:
 
 	void update(double deltaTime);
 
-	double getJulianDate() const { return julianDate; }
+	double getCurrentJulianDate() const { return julianDate; }
 	std::chrono::system_clock::time_point getCurrentTime() const { return currentTime; }
 	time_t toTimeT(std::chrono::system_clock::time_point timePoint);
 	std::string getStringCurrentTime();
+
+	static double calcJulianDateFromEpoch(int epochYear, double epochDay);
 
 private:
 	double julianDate;
 	std::chrono::system_clock::time_point currentTime;
 
-	void calcJulianDate();
+	static double calcJulianDate(int year, int month, int day, int hour, int minute, int second);
+	static void calcMonthDayFromEpoch(int year, double dayOfYear, int& month, int& day);
+	void calCurrentJulianDate();
 	std::tm getUtcTime(time_t time);
 };
 

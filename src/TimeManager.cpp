@@ -6,7 +6,7 @@
 TimeManager::TimeManager()
 {
     currentTime = std::chrono::system_clock::now();
-    calcJulianDate();
+    calCurrentJulianDate();
 }
 
 void TimeManager::update(double deltaTime)
@@ -31,20 +31,42 @@ std::string TimeManager::getStringCurrentTime()
     return str;
 }
 
-void TimeManager::calcJulianDate()
+double TimeManager::calcJulianDateFromEpoch(int epochYear, double epochDay)
 {
-    std::tm tm = getUtcTime(toTimeT(currentTime));
+    int day, month;
+    calcMonthDayFromEpoch(epochYear, epochDay, month, day);
 
-    int year = 1900 + tm.tm_year;
-    int month = 1 + tm.tm_mon;
-    int day = tm.tm_mday;
-    int hour = tm.tm_hour;
-    int minute = tm.tm_min;
-    int second = tm.tm_sec;
+    double fractionalDay = epochDay - static_cast<int>(epochDay);
+    int hour = static_cast<int>(fractionalDay * 24);
+    int minute = static_cast<int>((fractionalDay * 24 - hour) * 60);
+    int second = static_cast<int>(((fractionalDay * 24 - hour) * 60 - minute) * 60);
 
-    std::cout << day << "." << month << "." << year <<
-        " " << hour << ":" << minute << ":" << second << std::endl;
+    return calcJulianDate(epochYear, month, day, hour, minute, second);
+}
 
+void TimeManager::calcMonthDayFromEpoch(int year, double dayOfYear, int& month, int& day)
+{
+    bool isLeapYear = (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
+
+    int daysInMonth[2][12] = {
+        {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31}, // невисокосный
+        {31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31}  // високосный
+    };
+
+    day = static_cast<int>(dayOfYear); // сначала отбрасываем дробную часть, затем будем вычислять
+    month = 0;
+
+    while (day > daysInMonth[(int)isLeapYear][month]) {
+        day -= daysInMonth[(int)isLeapYear][month];
+        month++;
+    }
+
+    // в итоге получим необходимый день, а месяц увеличиваем на 1 (т.к. начали с 0)
+    month++;
+}
+
+double TimeManager::calcJulianDate(int year, int month, int day, int hour, int minute, int second)
+{
     if (month <= 2) { // в юлианском календаре год начинается с марта
         year--;
         month += 12;
@@ -59,9 +81,26 @@ void TimeManager::calcJulianDate()
     // 1524.5 — сдвиг для согласования с астрономической эпохой
     //double jd = floor(365.25 * (year + 4716)) + floor(30.6001 * (month + 1)) + day + b - 1524.5;
     //jd += (hour + minute / 60.0 + second / 3600.0) / 24.0;
-    julianDate = 367 * year - floor(7 * (year + floor((month + 9) / 12)) / 4)
+    return 367 * year - floor(7 * (year + floor((month + 9) / 12)) / 4)
         + floor(275 * month / 9) + day + 1721013.5
         + (hour + minute / 60.0 + second / 3600.0) / 24.0;
+}
+
+void TimeManager::calCurrentJulianDate()
+{
+    std::tm tm = getUtcTime(toTimeT(currentTime));
+
+    int year = 1900 + tm.tm_year;
+    int month = 1 + tm.tm_mon;
+    int day = tm.tm_mday;
+    int hour = tm.tm_hour;
+    int minute = tm.tm_min;
+    int second = tm.tm_sec;
+
+    std::cout << day << "." << month << "." << year <<
+        " " << hour << ":" << minute << ":" << second << std::endl;
+
+    julianDate = calcJulianDate(year, month, day, hour, minute, second);
 }
 
 std::tm TimeManager::getUtcTime(time_t time)

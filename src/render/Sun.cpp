@@ -5,7 +5,7 @@
 
 glm::vec3 Sun::getDirection()
 {
-    double jd = timeManager->getJulianDate();
+    double jd = timeManager->getCurrentJulianDate();
     std::cout << jd << std::endl;
 
     // Вычисляем эклиптическую долготу Солнца
