@@ -5,6 +5,13 @@ project(${PROJECT_NAME})
 
 add_compile_definitions(_USE_MATH_DEFINES)
 
+if(WIN32)
+    add_compile_definitions(WIN32_LEAN_AND_MEAN)
+    add_compile_definitions(NOMINMAX)
+    # Отключаем автоматическое определение interface
+    add_compile_definitions(NO_WINDOWS_H_INTERFACE_DEFINE)  
+endif()
+
 add_subdirectory(third_party/SDL EXCLUDE_FROM_ALL)
 add_subdirectory(third_party/glad EXCLUDE_FROM_ALL)
 
@@ -18,6 +25,7 @@ add_executable(${PROJECT_NAME}
                 src/Camera.cpp 
                 src/TimeManager.h
                 src/TimeManager.cpp
+                src/EventBus.h
                 src/render/Earth.h 
                 src/render/Earth.cpp
                 src/render/Sun.h 

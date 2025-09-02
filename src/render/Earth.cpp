@@ -1,16 +1,18 @@
 #include "Earth.h"
 #include "Shaders.h"
 
-#define _USE_MATH_DEFINES
-#include <math.h>
+#include <iostream>
 
 #include <SDL3/SDL.h>
 #include <glm/gtc/matrix_transform.hpp>
 
+#define _USE_MATH_DEFINES
+#include <math.h>
+
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-#include <iostream>
+
 
 Earth::Earth()
 {

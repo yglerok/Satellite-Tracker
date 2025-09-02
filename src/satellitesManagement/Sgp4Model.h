@@ -31,6 +31,7 @@ public:
 	const std::string& getTleLine2() const { return tleLine2; }
 	int getNoradId() const;
 	bool isValid() const { return isInitialized; }
+	double getEpochJulianDate() const;
 
 protected:
 	bool initialize();

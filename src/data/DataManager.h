@@ -9,6 +9,7 @@
 #include "Database.h"
 #include "TleParser.h"
 #include "GroupManager.h"
+#include "../EventBus.h"
 
 class DataManager
 {
@@ -42,6 +43,10 @@ public:
 	std::vector<std::string> getAllGroupNames();
 	bool sortSatellitesIntoGroups();
 
+	void setEventBus(EventBus* bus) {
+		eventBus = bus;
+	}
+
 private:
 	std::optional<std::string> downloadTleData();
 
@@ -56,4 +61,6 @@ private:
 	std::unique_ptr<GroupManager> groupManager;
 
 	static size_t writeCallback(void* contents, size_t size, size_t nmemb, std::string* data);
+
+	EventBus* eventBus;
 };

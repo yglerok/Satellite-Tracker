@@ -40,9 +40,9 @@ glm::vec3 Sun::getDirection()
     // Z астро -> Y сцены (вверх)
 
     glm::vec3 sceneDir = glm::vec3(
-        dir.x,  // восток
+        dir.y,  // восток
         dir.z,  // вверх (северный полюс)
-        -dir.y  // север (весеннее равноденствие -> юг)
+        -dir.x  // север (весеннее равноденствие -> юг)
     );
 
     std::cout << "sceneDir: " << glm::normalize(sceneDir).x << ", "

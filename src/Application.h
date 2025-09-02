@@ -71,4 +71,5 @@ private:
 	void loadDataFromDatabase(const std::string& backupPath);
 
 	std::shared_ptr<TimeManager> timeManager;
+	std::unique_ptr<EventBus> eventBus;
 };

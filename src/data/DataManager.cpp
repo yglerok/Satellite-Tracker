@@ -306,6 +306,9 @@ bool DataManager::updateDatabaseWithSatellites(const std::vector<SatelliteTle>& 
 	std::cout << "Database update complete: " << insertedCount << " inserted, "
 		<< updatedCount << " updated, "	<< failedCount << " failed" << std::endl;
 
+	if (eventBus)
+		eventBus->publish("TLE_DATA_UPDATED");
+
 	return true;
 }
 

@@ -67,6 +67,10 @@ void Application::start()
 		return;
 	}
 
+	eventBus = std::make_unique<EventBus>();
+	dataManager->setEventBus(eventBus.get());
+	// добавить создание менеджера спутников и прив€зку к шине событий
+
 	// «агрузка шейдера
 	shaderProgram = Shader::create("res/shaders/earth.vert", "res/shaders/earth.frag");
 

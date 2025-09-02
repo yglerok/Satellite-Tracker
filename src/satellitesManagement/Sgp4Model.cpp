@@ -3,6 +3,7 @@
 
 #include <charconv> // Для std::from_chars (C++17)
 #include <cstring>  // Для std::strlen
+#include <iostream>
 
 // Вспомогательная функция для парсинга чисел и дробей из строки TLE
 static double parseTleDouble(const char* str, int start, int length, double defaultVal = 0.0) {
@@ -179,6 +180,18 @@ bool Sgp4Model::calcPosition(double minutesSinceEpoch, glm::dvec3& outPosition, 
 int Sgp4Model::getNoradId() const
 {
     return TleParser::extractNoradIdFromLine2(tleLine2);
+}
+
+double Sgp4Model::getEpochJulianDate() const
+{
+    try {
+        return elements->jdsatepoch;
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Failed to getEpochJulianDate " << e.what() << std::endl;
+        return 0.0;
+    }
+        
 }
 
 bool Sgp4Model::initialize()
