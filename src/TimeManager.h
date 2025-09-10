@@ -24,7 +24,7 @@ private:
 
 	static double calcJulianDate(int year, int month, int day, int hour, int minute, int second);
 	static void calcMonthDayFromEpoch(int year, double dayOfYear, int& month, int& day);
-	void calCurrentJulianDate();
+	void calcCurrentJulianDate();
 	std::tm getUtcTime(time_t time);
 };
 

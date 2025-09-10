@@ -37,23 +37,31 @@ static double parseTleDouble(const char* str, int start, int length, double defa
     return defaultVal;
 }
 
-static double parseTleExpNumber(const char* str, int start, int length)
+static double parseTleExpNumber(const char* str, int start, int length, bool isBstar = false)
 {
     char buffer[16] = { 0 };
     std::strncpy(buffer, str + start, length);
     buffer[length] = '\0';
 
-    // Если строка пустая
-    if (std::strspn(buffer, " ") == length)
+    // Удаляем все пробелы
+    std::string numStr(buffer);
+    numStr.erase(std::remove(numStr.begin(), numStr.end(), ' '), numStr.end());
+
+    if (numStr.empty()) 
         return 0.0;
 
-    // обрабатываем формат с экспонентой
-    std::string numStr(buffer);
-    size_t minusPos = numStr.find('-');
-    size_t plusPos = numStr.find('+');
+    if (numStr.find('.') == std::string::npos) {
+        numStr = "0." + numStr;
+    }
+    else if (numStr[0] == '.') {
+        numStr = "0" + numStr;
+    }
 
-    if (minusPos != std::string::npos && minusPos > 0) {
-        // если минус не в первой позиции - это экспонента
+    // Ищем знак экспоненты (может быть в любой позиции кроме первой)
+    size_t minusPos = numStr.find('-', 1);  // Ищем минус не на первой позиции
+    size_t plusPos = numStr.find('+', 1);   // Ищем плюс не на первой позиции
+
+    if (minusPos != std::string::npos) {
         std::string baseStr = numStr.substr(0, minusPos);
         std::string expStr = numStr.substr(minusPos + 1);
 
@@ -61,7 +69,7 @@ static double parseTleExpNumber(const char* str, int start, int length)
         int exponent = std::atoi(expStr.c_str());
         return base * std::pow(10.0, -exponent);
     }
-    else if (plusPos != std::string::npos && plusPos > 0) {
+    else if (plusPos != std::string::npos) {
         std::string baseStr = numStr.substr(0, plusPos);
         std::string expStr = numStr.substr(plusPos + 1);
 
@@ -70,7 +78,7 @@ static double parseTleExpNumber(const char* str, int start, int length)
         return base * std::pow(10.0, exponent);
     }
     else {
-        return std::strtod(buffer, nullptr);
+        return std::strtod(numStr.c_str(), nullptr);
     }
 }
 
@@ -108,7 +116,7 @@ Sgp4Model::Sgp4Model(const std::string& line1, const std::string& line2) :
     elements->nddot = parseTleExpNumber(l1, 44, 8);
 
     // 8. Коэффициент торможения B* - позиции 54-61
-    elements->bstar = parseTleExpNumber(l1, 53, 8);
+    elements->bstar = parseTleExpNumber(l1, 53, 8, true);
 
     // 9. Тип эфемерид - позиция 63 (0 = даны, 1 = SGP4/SDP4)
     elements->ephtype = static_cast<int>(parseTleDouble(l1, 62, 1));
@@ -139,7 +147,7 @@ Sgp4Model::Sgp4Model(const std::string& line1, const std::string& line2) :
     elements->mo = parseTleDouble(l2, 43, 8) * M_PI / 180.0; 
 
     // 8. Среднее движение (оборотов в день) - позиции 53-63
-    elements->no_kozai = parseTleDouble(l2, 52, 11);
+    elements->no_kozai = parseTleDouble(l2, 52, 11) * (2 * M_PI) / (24.0 * 60.0); // радиан/мин;
 
     // 9. Номер витка (Revolution number) - позиции 64-68
     elements->revnum = static_cast<long>(parseTleDouble(l2, 63, 5));
@@ -173,6 +181,10 @@ bool Sgp4Model::calcPosition(double minutesSinceEpoch, glm::dvec3& outPosition, 
     else {
         std::cerr << "SGP4 calculation failed for NORAD ID: " << getNoradId() << " at time " << minutesSinceEpoch << " min." << std::endl;
         std::cerr << "Error code: " << tempRec.error << std::endl;
+        std::cerr << "Ecco = " << tempRec.ecco << std::endl;
+        std::cerr << "no_kozai = " << tempRec.no_kozai << std::endl;
+        std::cout << "ndot=" << elements->ndot << ", nddot=" << elements->nddot
+            << ", bstar=" << elements->bstar << std::endl;
         return false;
     }
 }

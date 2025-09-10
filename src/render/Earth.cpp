@@ -12,8 +12,6 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-
-
 Earth::Earth()
 {
     genarateSphereVertices();
@@ -269,8 +267,14 @@ void Earth::render(const glm::mat4& view, const glm::mat4& projection, GLuint sh
     glBindVertexArray(vao);
     glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
-    
 
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, 0);  
 
     // Отрисовка меридиана
     //glDisable(GL_DEPTH_TEST);

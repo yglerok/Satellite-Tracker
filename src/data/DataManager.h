@@ -14,6 +14,7 @@
 class DataManager
 {
 public:
+	DataManager() = delete;
 	DataManager(const std::string& dbPath);
 	~DataManager();
 

@@ -19,14 +19,15 @@ bool Application::init()
 		std::cerr << "ERROR [SDL] Can't initialize SDL!" << std::endl;
 		return false;
 	}
-
+	
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+	
 	window = SDL_CreateWindow(title.c_str(), width, height, SDL_WINDOW_OPENGL);
 
 	// Настройка контекста openGL
 	context = SDL_GL_CreateContext(window);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 
 	if (!gladLoadGL()) {
 		std::cerr << "ERROR [glad] Can't load GL!" << std::endl;
@@ -47,30 +48,21 @@ bool Application::init()
 		return false;
 	}
 
+	if (!initializeManagers()) {
+		std::cerr << "Failed to init App!" << std::endl;
+		return false;
+	}
+
+	if (!satelliteRenderer.initialize()) {
+		std::cerr << "Failed to init satelliteRenderer!" << std::endl;
+		return false;
+	}
+
 	return true;
 }
 
 void Application::start()
 {
-	// Создание менеджера времени
-	timeManager = std::make_shared<TimeManager>();
-
-	std::filesystem::create_directories("data");
-	std::filesystem::create_directories("data/backups");
-
-	const std::string dbPath = "data/satellites.db";
-	const std::string backupPath = "data/backups/celestrak_backup.tle";
-
-	dataManager = std::make_unique<DataManager>(dbPath);
-	if (!dataManager->initialize()) {
-		std::cerr << "Failed to initialize DataManager!" << std::endl;
-		return;
-	}
-
-	eventBus = std::make_unique<EventBus>();
-	dataManager->setEventBus(eventBus.get());
-	// добавить создание менеджера спутников и привязку к шине событий
-
 	// Загрузка шейдера
 	shaderProgram = Shader::create("res/shaders/earth.vert", "res/shaders/earth.frag");
 
@@ -82,9 +74,6 @@ void Application::start()
 	// сделать здесь динамическое создание
 	sun = std::make_unique<Sun>(timeManager);
 	sun->setLightning(shaderProgram);
-
-	// Загрузка и сортировка спутников
-	loadDataFromDatabase(backupPath);
 
 	// Настройка OpenGL
 	glEnable(GL_DEPTH_TEST);
@@ -186,6 +175,8 @@ void Application::update(double dt)
 	timeManager->update(dt);
 
 	camera->update(dt);
+
+	satelliteManager->update(timeManager->getCurrentJulianDate());
 	
 	// Настройка освещения
 	Shader::setFloat(shaderProgram, "ambientStrength", inputParams.ambientStrength);
@@ -200,22 +191,15 @@ void Application::render(double alpha)
 {
 	// Очистка буферов
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	
-	// Интерполяция позиции камеры для плавности
-	//glm::vec3 renderCameraPos = prevCameraPosition +
-	//	(currentCameraPosition - prevCameraPosition) * alpha;
-
-	//// Обновляем view матрицу с интерполированной позицией
-	//glm::mat4 interpolatedView = glm::lookAt(
-	//	renderCameraPos,
-	//	glm::vec3(0.0f, 0.0f, 0.0f),
-	//	glm::vec3(0.0f, 1.0f, 0.0f)
-	//);
 
 	camera->render(alpha);
 
 	// Отрисовка Земли
 	earth->render(camera->getView(), camera->getProjection(), shaderProgram);
+
+	satelliteRenderer.renderSatellites(camera->getView(), camera->getProjection(), satelliteManager->getSatelliteStates());
+	/*satelliteRenderer.renderOrbits(camera->getView(), camera->getProjection(), satelliteManager->getSatelliteStates(),
+		satelliteManager->getModels(), timeManager->getCurrentJulianDate());*/
 
 	ImGuiIO& io = ImGui::GetIO();
 	io.DisplaySize.x = static_cast<float>(width);
@@ -261,4 +245,36 @@ void Application::loadDataFromDatabase(const std::string& backupPath)
 		auto satellites = dataManager->getSatellitesByGroup(group);
 		std::cout << "Group " << group << ": " << satellites.size() << " satellites" << std::endl;
 	}
+}
+
+bool Application::initializeManagers()
+{
+	eventBus = std::make_unique<EventBus>();
+	
+	// Создание менеджера времени
+	timeManager = std::make_shared<TimeManager>();
+
+	std::filesystem::create_directories("data");
+	std::filesystem::create_directories("data/backups");
+
+	const std::string dbPath = "data/satellites.db";
+	const std::string backupPath = "data/backups/celestrak_backup.tle";
+
+	dataManager = std::make_shared<DataManager>(dbPath);
+	if (!dataManager->initialize()) {
+		std::cerr << "Failed to initialize DataManager!" << std::endl;
+		return false;
+	}
+
+	satelliteManager = std::make_unique<SatelliteManager>(dataManager);
+	if (!satelliteManager->initialize()) {
+		std::cerr << "Failed to initialize SatelliteManager" << std::endl;
+		return false;
+	}
+
+	dataManager->setEventBus(eventBus.get());
+	satelliteManager->setEventBus(eventBus.get());
+
+	// Загрузка и сортировка спутников
+	loadDataFromDatabase(backupPath);
 }

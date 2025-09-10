@@ -22,6 +22,7 @@
 #include "TimeManager.h"
 
 #include "data/DataManager.h"
+#include "render/SatelliteRenderer.h"
 
 static struct MouseState {
 	bool isPressed = false;
@@ -38,6 +39,7 @@ struct InputParameters {
 class Application
 {
 public:
+	Application() = delete;
 	Application(const char* appTitle, int appWidth, int appHeight);
 	~Application() = default;
 	
@@ -67,9 +69,14 @@ private:
 	MouseState mouseState;
 	InputParameters inputParams;
 
-	std::unique_ptr<DataManager> dataManager;
+	std::shared_ptr<DataManager> dataManager;
 	void loadDataFromDatabase(const std::string& backupPath);
+
+	std::unique_ptr<SatelliteManager> satelliteManager;
+	SatelliteRenderer satelliteRenderer;
 
 	std::shared_ptr<TimeManager> timeManager;
 	std::unique_ptr<EventBus> eventBus;
+
+	bool initializeManagers();
 };

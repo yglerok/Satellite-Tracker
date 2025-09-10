@@ -17,12 +17,20 @@ void SatelliteManager::update(double utcJd)
 	visibleSatelliteStates.clear();
 	visibleSatelliteStates.reserve(satelliteData.size());
 
+	//std::cout << "Current UTC JD: " << utcJd << std::endl;
+
 	for (auto& [noradId, satData] : satelliteData) {
 		if (!satData.isActive)
 			continue;
 
+		double epochJD = satData.model->getEpochJulianDate();
+		//std::cout << "Current epochJD: " << epochJD << std::endl;
 		// 1. Рассчитываем время, прошедшее с эпохи TLE (в минутах)
-		double minutesSinceEpoch = (utcJd - satData.model->getEpochJulianDate()) * 24.0 * 60.0;
+		double minutesSinceEpoch = (utcJd - epochJD) * 24.0 * 60.0;
+
+		if (std::abs(minutesSinceEpoch) > 7 * 24 * 60) { // 7 дней
+			continue;
+		}
 
 		// 2. Вычисляем положение в TEME
 		glm::dvec3 positionTeme, velocityTeme;
@@ -41,10 +49,14 @@ void SatelliteManager::update(double utcJd)
 			// 6. Добавляем в список видимых
 			if (satData.currentState.isVisible)
 				visibleSatelliteStates.push_back(satData.currentState);
-			else
-				std::cerr << "Failed to calculate position for satellite: " << satData.currentState.name << std::endl;
+			
 
 		}
+		else {
+			std::cerr << "Failed to calculate position for satellite: " << satData.currentState.name << std::endl;
+			satData.isActive = false;
+		}
+				
 	}
 }
 
@@ -87,6 +99,7 @@ void SatelliteManager::onTleDataUpdated()
 void SatelliteManager::loadModelsFromDatabase()
 {
 	satelliteData.clear();
+	models.clear();
 	visibleSatelliteStates.clear();
 
 	auto satellites = dataManager->getAllSatellites();
@@ -95,13 +108,14 @@ void SatelliteManager::loadModelsFromDatabase()
 	for (const auto& satellite : satellites) {
 		auto model = Sgp4ModelFactory::create(satellite.tleLine1, satellite.tleLine2);
 		if (model && model->isValid()) {
-			InternalSatData data;
+			SatelliteData data;
 			data.model = model;
 			data.currentState.noradId = satellite.noradId;
 			data.currentState.name = satellite.name;
 			data.isActive = true;
 
 			satelliteData[satellite.noradId] = std::move(data);
+			models[satellite.noradId] = model;
 		}
 		else 
 			std::cerr << "Failed to create model for: " << satellite.name << std::endl;
@@ -110,7 +124,7 @@ void SatelliteManager::loadModelsFromDatabase()
 }
 
 void SatelliteManager::temeToEcef(double utcJd, const glm::dvec3& posTeme, const glm::dvec3& velTeme, 
-	glm::dvec3& posEcef, glm::dvec3& velEcef) const
+	glm::dvec3& posEcef, glm::dvec3& velEcef)
 {
 	double gst = gstime(utcJd);
 
@@ -120,7 +134,7 @@ void SatelliteManager::temeToEcef(double utcJd, const glm::dvec3& posTeme, const
 	// Поворачиваем позицию
 	posEcef.x = posTeme.x * cosg + posTeme.y * sing;
 	posEcef.y = -posTeme.x * sing + posTeme.y * cosg;
-	posEcef.z = posEcef.z;
+	posEcef.z = posTeme.z;
 
 	// Поворачиваем скорость
 	velEcef.x = velTeme.x * cosg + velTeme.y * sing;

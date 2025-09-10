@@ -33,6 +33,8 @@ add_executable(${PROJECT_NAME}
                 src/render/Shaders.h
                 src/render/Shaders.cpp 
                 src/render/stb_image.h
+                src/render/SatelliteRenderer.h
+                src/render/SatelliteRenderer.cpp
                 src/data/Database.h
                 src/data/Database.cpp
                 src/data/TleParser.h
