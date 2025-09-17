@@ -33,7 +33,7 @@ void Camera::increaseTheta(float deltaTheta)
 void Camera::increaseRadius(float deltaR)
 {
 	radius.target -= deltaR * 0.5;
-	radius.target = glm::clamp(radius.target, 3.0f, 15.0f);
+	radius.target = glm::clamp(radius.target, 3.0f, 20.0f);
 }
 
 void Camera::reset()

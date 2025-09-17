@@ -94,6 +94,8 @@ void SatelliteRenderer::renderSatellites(const glm::mat4& view, const glm::mat4&
 		/*std::cout << "  Scaled position: " << scaledPosition.x << ", "
 			<< scaledPosition.y << ", " << scaledPosition.z << std::endl;*/
 
+		scaledPosition = glm::vec3(scaledPosition.x, scaledPosition.z, -scaledPosition.y);
+
 		// Создаем матрицу модели
 		glm::mat4 model = glm::mat4(1.0f);
 		model = glm::translate(model, scaledPosition);
@@ -105,13 +107,14 @@ void SatelliteRenderer::renderSatellites(const glm::mat4& view, const glm::mat4&
 		// Деление на W для получения NDC координат
 		glm::vec3 ndcPos = glm::vec3(clipPos) / clipPos.w;
 
+
 		//std::cout << "NDC position: " << ndcPos.x << ", " << ndcPos.y << ", " << ndcPos.z << std::endl;
 
 		// Если координаты в допустимом диапазоне, рисуем
-		if (ndcPos.z > -1.0f && ndcPos.z < 1.0f) {
+		//if (ndcPos.z > -1.0f && ndcPos.z < 1.0f) {
 			Shader::setMat4(satelliteShader, "model", model);
 			glDrawArrays(GL_POINTS, 0, 1);
-		}
+		//}
 
 		///model = glm::scale(model, glm::vec3(0.02f)); // Небольшой масштаб для видимости
 

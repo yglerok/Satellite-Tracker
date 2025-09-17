@@ -6,6 +6,7 @@
 #include <memory>
 #include <map>
 #include <vector>
+#include <mutex>
 #include <glm/glm.hpp>
 
 class EventBus; // Класс для связи dataManager с SatelliteManager
@@ -38,7 +39,8 @@ public:
     // TEME - система координат, зафиксированная относительно звезд. Ее оси не вращаются с Землей
     // ECEF - система координат, которая вращается с Землей. Ось Z направлена на северный полюс, X - на гринвичский меридиан
     // Преобразование заключается в повороте вокруг оси Z на угол, равный гринвичкому звездному времени
-    static void temeToEcef(double utcJd, const glm::dvec3& posTeme, const glm::dvec3& velTeme, glm::dvec3& posEcef, glm::dvec3& velEcef);
+    static void temeToEcef(double utcJd, const glm::dvec3& posTeme, const glm::dvec3& velTeme,
+        glm::dvec3& posEcef, glm::dvec3& velEcef);
 
     // Простейшая фильтрация
     void setGroupFilter(const std::string& groupName);
@@ -47,6 +49,8 @@ public:
     const std::map<int, std::shared_ptr<Sgp4Model>>& getModels() const { return models; }
 
 private:
+    std::mutex mtx;
+
     struct SatelliteData {
         std::shared_ptr<const Sgp4Model> model; // Неизменяемая модель
         SatelliteState currentState;

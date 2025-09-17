@@ -13,6 +13,7 @@
 
 #include <string>
 #include <chrono>
+#include <thread>
 
 #include "render/Earth.h"
 #include "render/Shaders.h"
@@ -52,6 +53,7 @@ private:
 	int width, height;
 	bool isRunning = true;
 	const int FPS = 60;
+	const double satelliteUpdateInterval = 1.0;
 	
 	void processInput();
 	void update(double dt);

@@ -241,9 +241,9 @@ void Earth::renderAxes(const glm::mat4& view, const glm::mat4& projection) const
 
 void Earth::render(const glm::mat4& view, const glm::mat4& projection, GLuint shader) const
 {
-    glDisable(GL_DEPTH_TEST);
+    /*glDisable(GL_DEPTH_TEST);
     renderAxes(view, projection);
-    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_DEPTH_TEST);*/
 
     glUseProgram(shader);
 

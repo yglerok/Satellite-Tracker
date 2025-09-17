@@ -172,11 +172,11 @@ void Application::processInput()
 
 void Application::update(double dt)
 {
+	static double lastSatelliteCalculation = 0;
+
 	timeManager->update(dt);
 
-	camera->update(dt);
-
-	satelliteManager->update(timeManager->getCurrentJulianDate());
+	camera->update(dt);	
 	
 	// Настройка освещения
 	Shader::setFloat(shaderProgram, "ambientStrength", inputParams.ambientStrength);
@@ -185,6 +185,20 @@ void Application::update(double dt)
 	Shader::setVec3(shaderProgram, "lightColor", glm::vec3(inputParams.lightColor[0], inputParams.lightColor[1], inputParams.lightColor[2]));
 
 	Shader::setFloat(shaderProgram, "nightIntensity", inputParams.nightTextureIntensity);
+	
+	lastSatelliteCalculation += dt;
+
+	if (lastSatelliteCalculation >= satelliteUpdateInterval) {
+		std::thread t([&]() {
+			satelliteManager->update(timeManager->getCurrentJulianDate());
+		});
+
+		t.join();
+
+		lastSatelliteCalculation = 0;
+	}
+
+	
 }
 
 void Application::render(double alpha)
@@ -209,18 +223,19 @@ void Application::render(double alpha)
 	ImGui_ImplSDL3_NewFrame();
 	ImGui::NewFrame();
 
-	//ImGui::ShowDemoWindow();
-	ImGui::Begin("Lightning settings", 0, ImGuiWindowFlags_AlwaysAutoResize);
+	ImGui::ShowDemoWindow();
+	//ImGui::Begin("Lightning settings", 0, ImGuiWindowFlags_AlwaysAutoResize);
 
-	ImGui::DragFloat("Ambient strength", &inputParams.ambientStrength, 0.001f, 0.0f, 0.3f);
-	ImGui::DragFloat("Specular strength", &inputParams.specularStrength, 0.01f, 0.0f, 1.0f);
-	//ImGui::DragFloat3("Light position (x, y, z)", inputParams.lightPos, 0.1f, -15.0f, 15.0f);
-	ImGui::ColorEdit3("Light color", inputParams.lightColor);
+	//ImGui::DragFloat("Ambient strength", &inputParams.ambientStrength, 0.001f, 0.0f, 0.3f);
+	//ImGui::DragFloat("Specular strength", &inputParams.specularStrength, 0.01f, 0.0f, 1.0f);
+	////ImGui::DragFloat3("Light position (x, y, z)", inputParams.lightPos, 0.1f, -15.0f, 15.0f);
+	//ImGui::ColorEdit3("Light color", inputParams.lightColor);
 
-	ImGui::End();
+	//ImGui::End();
 
-	ImGui::Begin("Time", 0, ImGuiWindowFlags_AlwaysAutoResize);
+	ImGui::Begin("Menu", 0, ImGuiWindowFlags_AlwaysAutoResize);
 	ImGui::Text(timeManager->getStringCurrentTime().c_str());
+
 	ImGui::End();
 
 	ImGui::Render();

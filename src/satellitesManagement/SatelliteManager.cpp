@@ -14,6 +14,8 @@ bool SatelliteManager::initialize()
 
 void SatelliteManager::update(double utcJd)
 {
+	std::unique_lock<std::mutex> ul(mtx, std::defer_lock);
+
 	visibleSatelliteStates.clear();
 	visibleSatelliteStates.reserve(satelliteData.size());
 
@@ -47,8 +49,12 @@ void SatelliteManager::update(double utcJd)
 			satData.currentState.isVisible = isSatelliteVisible(noradId);
 
 			// 6. Добавляем в список видимых
-			if (satData.currentState.isVisible)
+			if (satData.currentState.isVisible) {
+				ul.lock();
 				visibleSatelliteStates.push_back(satData.currentState);
+				ul.unlock();
+			}
+				
 			
 
 		}
