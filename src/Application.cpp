@@ -234,7 +234,35 @@ void Application::render(double alpha)
 	//ImGui::End();
 
 	ImGui::Begin("Menu", 0, ImGuiWindowFlags_AlwaysAutoResize);
+	ImGui::SeparatorText("Time");
 	ImGui::Text(timeManager->getStringCurrentTime().c_str());
+
+	if (ImGui::CollapsingHeader("Filters")) {
+		//ImGui::SeparatorText("Info");
+		ImGui::Text("...");
+		ImGui::Text("Displaing groups:");
+		ImGui::SameLine();
+		ImGui::Button("Select all");
+		ImGui::SameLine();
+		ImGui::Button("Unselect all");
+		for (auto& [filter, state] : filters) {
+			ImGui::Checkbox(filter.c_str(), &state);
+		}
+		/*ImGui::Checkbox("GLONASS", &filters["isGLONASS"]);
+		ImGui::Checkbox("Galileo", &filters["isGalileo"]);
+		ImGui::Checkbox("BeiDou", &filters["isBeiDou"]);
+		ImGui::Checkbox("Weather", &filters["isWeather"]);
+		ImGui::Checkbox("ISS", &filters["isISS"]);
+		ImGui::Checkbox("Space Stations", &filters["isSpaceStations"]);
+		ImGui::Checkbox("Scientific", &filters["isScientific"]);
+		ImGui::Checkbox("Geostationary", &filters["isGeostationary"]);
+		ImGui::Checkbox("Low Earth Orbit", &filters["isLowEarthOrbit"]);
+		ImGui::Checkbox("Medium Earth Orbit", &filters["isMediumEarthOrbit"]);
+		ImGui::Checkbox("High Earth Orbit", &filters["isHighEarthOrbit"]);
+		ImGui::Checkbox("Other", &filters["isOther"]);*/
+
+		satelliteManager->setGroupFilters(filters);
+	}
 
 	ImGui::End();
 
@@ -292,4 +320,9 @@ bool Application::initializeManagers()
 
 	// Загрузка и сортировка спутников
 	loadDataFromDatabase(backupPath);
+
+	// Извлечение фильтров групп
+	for (const auto& groupName : dataManager->getAllGroupNames()) {
+		filters.emplace(groupName, true);
+	}
 }

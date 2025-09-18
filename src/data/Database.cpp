@@ -302,7 +302,7 @@ bool Database::addSatelliteToGroup(int noradId, const std::string& group)
 
 bool Database::removeSatelliteFromGroup(int noradId, const std::string& group)
 {
-	const char* sql = "DELETE FROM sqtellite_groups WHERE norad_id = ? AND group_name = ?";
+	const char* sql = "DELETE FROM satellite_groups WHERE norad_id = ? AND group_name = ?";
 
 	sqlite3_stmt* stmt;
 	int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr);
@@ -323,8 +323,7 @@ bool Database::removeSatelliteFromGroup(int noradId, const std::string& group)
 std::vector<std::string> Database::getSatelliteGroups(int noradId)
 {
 	std::vector<std::string> groups;
-	const char* sql = R"(SELECT group_name FROM satellite_groups WHERE norad_id = ? 
-						ORDER BY group_name)";
+	const char* sql = R"(SELECT group_name FROM satellite_groups WHERE norad_id = ? ORDER BY group_name)";
 
 	sqlite3_stmt* stmt;
 	int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr);
@@ -332,6 +331,8 @@ std::vector<std::string> Database::getSatelliteGroups(int noradId)
 		std::cerr << "[getSatelliteGroups] Failed to prepare statement: " << sqlite3_errmsg(db) << std::endl;
 		return groups;
 	}
+
+	sqlite3_bind_int(stmt, 1, noradId);
 
 	while (sqlite3_step(stmt) == SQLITE_ROW) {
 		groups.push_back(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0)));

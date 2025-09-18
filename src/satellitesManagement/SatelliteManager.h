@@ -8,6 +8,7 @@
 #include <vector>
 #include <mutex>
 #include <glm/glm.hpp>
+#include <unordered_map>
 
 class EventBus; // Класс для связи dataManager с SatelliteManager
 
@@ -43,7 +44,7 @@ public:
         glm::dvec3& posEcef, glm::dvec3& velEcef);
 
     // Простейшая фильтрация
-    void setGroupFilter(const std::string& groupName);
+    void setGroupFilters(const std::unordered_map<std::string, bool>& groupNames);
     void clearFilter();
 
     const std::map<int, std::shared_ptr<Sgp4Model>>& getModels() const { return models; }
@@ -72,5 +73,5 @@ private:
 
     std::vector<SatelliteState> visibleSatelliteStates; // Актуальный список для рендерера
 
-    std::string currentFilterGroup;
+    std::unordered_map<std::string, bool> currentFilterGroups;
 };

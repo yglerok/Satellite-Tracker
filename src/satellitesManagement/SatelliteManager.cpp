@@ -84,15 +84,15 @@ const SatelliteState* SatelliteManager::getSatelliteState(int noradId) const
 		return nullptr;
 }
 
-void SatelliteManager::setGroupFilter(const std::string& groupName)
+void SatelliteManager::setGroupFilters(const std::unordered_map<std::string, bool>& groupNames)
 {
-	currentFilterGroup = groupName;
-	std::cout << "Filter set to group: " << groupName << std::endl;
+	currentFilterGroups = groupNames;
+	//std::cout << "Filter set to group: " << groupName << std::endl;
 }
 
 void SatelliteManager::clearFilter()
 {
-	currentFilterGroup.clear();
+	currentFilterGroups.clear();
 	std::cout << "Filter cleared" << std::endl;
 }
 
@@ -150,11 +150,18 @@ void SatelliteManager::temeToEcef(double utcJd, const glm::dvec3& posTeme, const
 
 bool SatelliteManager::isSatelliteVisible(int noradId) const
 {
-	if (currentFilterGroup.empty())
+	if (currentFilterGroups.empty())
 		return true;
 
 	// Проверяем, принадлежит ли спутник к выбранной группе. Делаем запрос к DataManager
 	auto groups = dataManager->getSatelliteGroups(noradId);
 
-	return std::find(groups.begin(), groups.end(), currentFilterGroup) != groups.end();
+	for (const auto& [filter, state] : currentFilterGroups) {
+		if (!state)
+			continue;
+		if (std::find(groups.begin(), groups.end(), filter) != groups.end())
+			return true;
+	}
+
+	return false;
 }
