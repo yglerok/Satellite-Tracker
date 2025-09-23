@@ -63,6 +63,10 @@ bool Application::init()
 
 void Application::start()
 {
+	// Настройка OpenGL
+	glEnable(GL_DEPTH_TEST);
+	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+
 	// Загрузка шейдера
 	shaderProgram = Shader::create("res/shaders/earth.vert", "res/shaders/earth.frag");
 
@@ -74,11 +78,6 @@ void Application::start()
 	// сделать здесь динамическое создание
 	sun = std::make_unique<Sun>(timeManager);
 	sun->setLightning(shaderProgram);
-
-	// Настройка OpenGL
-	glEnable(GL_DEPTH_TEST);
-	//glEnable(GL_LIGHTING);
-	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 
 	auto previousTime = std::chrono::steady_clock::now();
 	double lag = 0.0;
@@ -177,6 +176,8 @@ void Application::update(double dt)
 	timeManager->update(dt);
 
 	camera->update(dt);	
+
+	glUseProgram(shaderProgram);
 	
 	// Настройка освещения
 	Shader::setFloat(shaderProgram, "ambientStrength", inputParams.ambientStrength);
@@ -203,8 +204,20 @@ void Application::update(double dt)
 
 void Application::render(double alpha)
 {
+	// Проверка ДО очистки
+	GLenum err = glGetError();
+	if (err != GL_NO_ERROR) {
+		std::cerr << "OpenGL error before clear: " << err << std::endl;
+	}
+
 	// Очистка буферов
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	err = glGetError();
+	if (err != GL_NO_ERROR) {
+		std::cerr << "OpenGL error after clear: " << err << std::endl;
+		// Но НЕ сбрасывайте состояние!
+	}
 
 	camera->render(alpha);
 
@@ -223,7 +236,7 @@ void Application::render(double alpha)
 	ImGui_ImplSDL3_NewFrame();
 	ImGui::NewFrame();
 
-	ImGui::ShowDemoWindow();
+	//ImGui::ShowDemoWindow();
 	//ImGui::Begin("Lightning settings", 0, ImGuiWindowFlags_AlwaysAutoResize);
 
 	//ImGui::DragFloat("Ambient strength", &inputParams.ambientStrength, 0.001f, 0.0f, 0.3f);

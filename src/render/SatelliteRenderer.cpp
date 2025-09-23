@@ -63,7 +63,7 @@ void SatelliteRenderer::renderSatellites(const glm::mat4& view, const glm::mat4&
 
 	glUseProgram(satelliteShader);
 
-	/*err = glGetError();
+	/*GLenum err = glGetError();
 	if (err != GL_NO_ERROR) {
 		std::cerr << "OpenGL error after glUseProgram: " << err << std::endl;
 	}*/
@@ -111,10 +111,10 @@ void SatelliteRenderer::renderSatellites(const glm::mat4& view, const glm::mat4&
 		//std::cout << "NDC position: " << ndcPos.x << ", " << ndcPos.y << ", " << ndcPos.z << std::endl;
 
 		// Если координаты в допустимом диапазоне, рисуем
-		//if (ndcPos.z > -1.0f && ndcPos.z < 1.0f) {
+		if (ndcPos.z > -1.0f && ndcPos.z < 1.0f) {
 			Shader::setMat4(satelliteShader, "model", model);
 			glDrawArrays(GL_POINTS, 0, 1);
-		//}
+		}
 
 		///model = glm::scale(model, glm::vec3(0.02f)); // Небольшой масштаб для видимости
 
@@ -259,6 +259,9 @@ void SatelliteRenderer::calcOrbits(const std::shared_ptr<struct Sgp4Model>& mode
 
 	for (int i = 0; i <= segments; ++i) {
 		double minutesSinceEpoch = startMinutesFromEpoch + i * timeStep;
+		if (std::abs(minutesSinceEpoch) > 7 * 24 * 60) { // 7 дней
+			return;
+		}
 
 		glm::dvec3 positionTeme, velocityTeme;
 		if (model->calcPosition(minutesSinceEpoch, positionTeme, velocityTeme)) {
@@ -270,17 +273,17 @@ void SatelliteRenderer::calcOrbits(const std::shared_ptr<struct Sgp4Model>& mode
 			SatelliteManager::temeToEcef(pointTimeJd, positionTeme, velocityTeme, positionEcef, velocityEcef);
 
 			// Масштабируем позицию
-			glm::dvec3 scaledPosition = glm::vec3(positionEcef) / 6371.0f;
+			glm::dvec3 scaledPosition = positionEcef / 6371.0;
 
-			outPoints.push_back(scaledPosition);
-		}
-
-		// Если орбита получилась слишком короткой, добавляем точки
-		if (outPoints.size() < 2) {
-			std::cerr << "Warning: Orbit calculation failed for satellite" << std::endl;
-			outPoints.clear();
+			outPoints.push_back(glm::vec3(scaledPosition));
 		}
 	}
+	// Если орбита получилась слишком короткой, добавляем точки
+	if (outPoints.size() < 2) {
+		std::cerr << "Warning: Orbit calculation failed for satellite" << std::endl;
+		outPoints.clear();
+	}
+
 }
 
 void SatelliteRenderer::updateOrbitCache(const std::map<int, std::shared_ptr<struct Sgp4Model>>& models,

@@ -245,6 +245,12 @@ void Earth::render(const glm::mat4& view, const glm::mat4& projection, GLuint sh
     renderAxes(view, projection);
     glEnable(GL_DEPTH_TEST);*/
 
+    //GLenum err = glGetError();
+    //if (err != GL_NO_ERROR) {
+    //    std::cerr << "OpenGL error before earth rendering: " << err << std::endl;
+    //    // Но НЕ сбрасывайте состояние!
+    //}
+
     glUseProgram(shader);
 
     glm::vec3 viewPos = glm::vec3(-view[3][0], -view[3][1], -view[3][2]);

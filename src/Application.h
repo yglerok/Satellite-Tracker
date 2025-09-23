@@ -70,7 +70,7 @@ private:
 	int width, height;
 	bool isRunning = true;
 	const int FPS = 60;
-	const double satelliteUpdateInterval = 5.0;
+	const double satelliteUpdateInterval = 1.0;
 	
 	void processInput();
 	void update(double dt);
