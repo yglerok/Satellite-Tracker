@@ -5,7 +5,7 @@
 #include <cmath>
 
 SatelliteRenderer::SatelliteRenderer() : satelliteColor(1.0f, 0.0f, 0.0f),
-	satelliteSize(2.0f), orbitColor(0.0f, 0.0f, 1.0f), orbitSegments(100),
+	satelliteSize(10.0f), orbitColor(0.0f, 0.0f, 1.0f), orbitSegments(100),
 	orbitDurationHours(2.0), showOrbits(true), showSatellites(true)
 {
 }
@@ -34,40 +34,14 @@ bool SatelliteRenderer::initialize()
 }
 
 void SatelliteRenderer::renderSatellites(const glm::mat4& view, const glm::mat4& projection, 
-	const std::vector<SatelliteState>& satellites)
+	const std::vector<SatelliteState>& satellites, bool onlyVisible)
 {
-	/*std::cout << "Renderer: showSatellites = " << showSatellites
-		<< ", satellites count = " << satellites.size() << std::endl;*/
-
-	//GLenum err = glGetError();
-	//if (err != GL_NO_ERROR) {
-	//	std::cerr << "OpenGL error before satellite rendering: " << err << std::endl;
-	//	// Но НЕ сбрасывайте состояние!
-	//}
-
 	if (!showSatellites || satellites.empty()) {
 		std::cout << "No satellites to render or rendering disabled" << std::endl;
 		return;
 	}
 
-	// ПРОВЕРКА ОШИБОК OPENGL
-	/*err = glGetError();
-	if (err != GL_NO_ERROR) {
-		std::cerr << "OpenGL error before rendering: " << err << std::endl;
-	}*/
-
-	// НАСТРОЙКА OpenGL ДЛЯ ТОЧЕК
-	/*glEnable(GL_PROGRAM_POINT_SIZE);
-	glEnable(GL_POINT_SMOOTH);
-	glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);*/
-
 	glUseProgram(satelliteShader);
-
-	/*GLenum err = glGetError();
-	if (err != GL_NO_ERROR) {
-		std::cerr << "OpenGL error after glUseProgram: " << err << std::endl;
-	}*/
-
 
 	Shader::setMat4(satelliteShader, "view", view);
 	Shader::setMat4(satelliteShader, "projection", projection);
@@ -76,85 +50,17 @@ void SatelliteRenderer::renderSatellites(const glm::mat4& view, const glm::mat4&
 
 	glBindVertexArray(satelliteVAO);
 
-	int visibleCount = 0;
+	int renderCount = 0;
 
 	for (const auto& satellite : satellites) {
-		if (!satellite.isVisible)
+		if (onlyVisible && !satellite.isVisible)
 			continue;
 
-		visibleCount++;
-
-		// Отладочная информация
-		/*std::cout << "Satellite " << satellite.noradId << " - " << satellite.name << std::endl;
-		std::cout << "  Position ECEF (km): " << satellite.positionEcef.x << ", "
-			<< satellite.positionEcef.y << ", " << satellite.positionEcef.z << std::endl;*/
-
-		// Масштабируем для Earth radius = 1.0
-		glm::vec3 scaledPosition = glm::vec3(satellite.positionEcef) / 6371.0f;
-		/*std::cout << "  Scaled position: " << scaledPosition.x << ", "
-			<< scaledPosition.y << ", " << scaledPosition.z << std::endl;*/
-
-		scaledPosition = glm::vec3(scaledPosition.x, scaledPosition.z, -scaledPosition.y);
-
-		// Создаем матрицу модели
-		glm::mat4 model = glm::mat4(1.0f);
-		model = glm::translate(model, scaledPosition);
-
-		// Полное преобразование
-		glm::mat4 mvp = projection * view * model;
-		glm::vec4 clipPos = mvp * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
-
-		// Деление на W для получения NDC координат
-		glm::vec3 ndcPos = glm::vec3(clipPos) / clipPos.w;
-
-
-		//std::cout << "NDC position: " << ndcPos.x << ", " << ndcPos.y << ", " << ndcPos.z << std::endl;
-
-		// Если координаты в допустимом диапазоне, рисуем
-		if (ndcPos.z > -1.0f && ndcPos.z < 1.0f) {
-			Shader::setMat4(satelliteShader, "model", model);
-			glDrawArrays(GL_POINTS, 0, 1);
-		}
-
-		///model = glm::scale(model, glm::vec3(0.02f)); // Небольшой масштаб для видимости
-
-		///Shader::setMat4(satelliteShader, "model", model);
-
-		// Проверяем матрицы
-		///glm::vec4 clipPos = projection * view * model * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
-		/*std::cout << "  Clip space position: " << clipPos.x << ", " << clipPos.y
-			<< ", " << clipPos.z << ", " << clipPos.w << std::endl;
-
-		if (clipPos.z > 1.0f || clipPos.z < -1.0f) {
-			std::cout << "  WARNING: Satellite outside clip space!" << std::endl;
-		}*/
-
-		///glDrawArrays(GL_POINTS, 0, 1);
-
-		//// Создаем матрицу модели для позиции спутника
-		//glm::mat4 model = glm::mat4(1.0f);
-		//model = glm::translate(model, glm::vec3(satellite.positionEcef));
-
-		//// Масштабируем позицию (если ECEF в км, а Earth radius = 1.0)
-		//model = glm::scale(model, glm::vec3(1.0f / 6371.0f));
-
-		//// Правильное масштабирование: координаты ECEF в км, Земля радиусом 1.0
-  //      //glm::vec3 scaledPosition = glm::vec3(satellite.positionEcef) / 6371.0f;
-  //      //model = glm::translate(model, scaledPosition);
-  //      //
-  //      //// Дополнительное небольшое масштабирование для видимости спутника
-  //      //model = glm::scale(model, glm::vec3(0.01f)); 
-
-		//Shader::setMat4(satelliteShader, "model", model);
-		//glDrawArrays(GL_POINTS, 0, 1);
+		renderSatellite(satellite, view, projection);
+		renderCount++;
 	}
 
 	glBindVertexArray(0);
-
-	/*err = glGetError();
-	if (err != GL_NO_ERROR) {
-		std::cerr << "OpenGL error after rendering: " << err << std::endl;
-	}*/
 }
 
 void SatelliteRenderer::renderOrbits(const glm::mat4& view, const glm::mat4& projection, 
@@ -240,6 +146,36 @@ void SatelliteRenderer::setupOrbitBuffers()
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void*)0);
 
 	glBindVertexArray(0);
+}
+
+void SatelliteRenderer::renderSatellite(const SatelliteState& satellite, const glm::mat4& view, const glm::mat4& projection)
+{
+	// Масштабируем для Earth radius = 1.0
+	glm::vec3 scaledPosition = glm::vec3(satellite.positionEcef) / 6371.0f;
+	/*std::cout << "  Scaled position: " << scaledPosition.x << ", "
+		<< scaledPosition.y << ", " << scaledPosition.z << std::endl;*/
+
+	scaledPosition = glm::vec3(scaledPosition.x, scaledPosition.z, -scaledPosition.y);
+
+	// Создаем матрицу модели
+	glm::mat4 model = glm::mat4(1.0f);
+	model = glm::translate(model, scaledPosition);
+
+	// Полное преобразование
+	glm::mat4 mvp = projection * view * model;
+	glm::vec4 clipPos = mvp * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+
+	// Деление на W для получения NDC координат
+	glm::vec3 ndcPos = glm::vec3(clipPos) / clipPos.w;
+
+
+	//std::cout << "NDC position: " << ndcPos.x << ", " << ndcPos.y << ", " << ndcPos.z << std::endl;
+
+	// Если координаты в допустимом диапазоне, рисуем
+	if (ndcPos.z > -1.0f && ndcPos.z < 1.0f) {
+		Shader::setMat4(satelliteShader, "model", model);
+		glDrawArrays(GL_POINTS, 0, 1);
+	}
 }
 
 void SatelliteRenderer::calcOrbits(const std::shared_ptr<struct Sgp4Model>& model, double startTimeJd, 

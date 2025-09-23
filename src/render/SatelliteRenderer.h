@@ -17,7 +17,7 @@ public:
 
 	bool initialize();
 	void renderSatellites(const glm::mat4& view, const glm::mat4& projection,
-		const std::vector<SatelliteState>& satellites);
+		const std::vector<SatelliteState>& satellites, bool onlyVisible);
 	void renderOrbits(const glm::mat4& view, const glm::mat4& projection,
 		const std::vector<SatelliteState>& satellites,
 		const std::map<int, std::shared_ptr<struct Sgp4Model>>& models,
@@ -56,6 +56,10 @@ private:
 	bool compileShaders();
 	void setupSatelliteBuffers();
 	void setupOrbitBuffers();
+
+	void renderSatellite(const SatelliteState& satellite, const glm::mat4& view,
+		const glm::mat4& projection);
+
 	void calcOrbits(const std::shared_ptr<struct Sgp4Model>& model,
 		double startTimeJd, double durationHours, int segments, std::vector<glm::vec3>& outPoints);
 	void updateOrbitCache(const std::map<int, std::shared_ptr<struct Sgp4Model>>& models,

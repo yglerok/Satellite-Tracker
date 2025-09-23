@@ -111,6 +111,16 @@ void Application::start()
 
 void Application::shutdown()
 {
+	if (updateFuture.valid()) {
+		try {
+			updateFuture.wait();
+			updateFuture.get();
+		}
+		catch (const std::exception& e) {
+			std::cerr << "ERROR during shutdown wait " << e.what() << std::endl;
+		}
+	}
+
 	delete camera;
 	delete earth;
 	glDeleteProgram(shaderProgram);
@@ -174,7 +184,6 @@ void Application::update(double dt)
 	static double lastSatelliteCalculation = 0;
 
 	timeManager->update(dt);
-
 	camera->update(dt);	
 
 	glUseProgram(shaderProgram);
@@ -189,14 +198,33 @@ void Application::update(double dt)
 	
 	lastSatelliteCalculation += dt;
 
-	if (lastSatelliteCalculation >= satelliteUpdateInterval) {
-		std::thread t([&]() {
-			satelliteManager->update(timeManager->getCurrentJulianDate());
-		});
-
-		t.join();
-
+	if (lastSatelliteCalculation >= satelliteUpdateInterval && !updateInProgress.load() &&
+		(!updateFuture.valid() || updateFuture.wait_for(std::chrono::seconds(0)) == std::future_status::ready)) {
+		updateInProgress = true;
 		lastSatelliteCalculation = 0;
+
+		updateFuture = std::async(std::launch::async, [this]() {
+			try {
+				satelliteManager->update(timeManager->getCurrentJulianDate());
+
+				std::lock_guard<std::mutex> lock(dataMutex);
+				cachedSatelliteStates = satelliteManager->getSatelliteStates();
+			}
+			catch (const std::exception& e) {
+				std::cerr << "ERROR in satellite update thread: " << e.what() << std::endl;
+			}
+			updateInProgress = false;
+			});
+	}
+
+
+	if (updateFuture.valid() && updateFuture.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
+		try {
+			updateFuture.get();
+		}
+		catch (const std::exception& e) {
+			std::cerr << "ERROR getting satellite update result: " << e.what() << std::endl;
+		}
 	}
 
 	
@@ -213,18 +241,16 @@ void Application::render(double alpha)
 	// Очистка буферов
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	err = glGetError();
-	if (err != GL_NO_ERROR) {
-		std::cerr << "OpenGL error after clear: " << err << std::endl;
-		// Но НЕ сбрасывайте состояние!
-	}
-
 	camera->render(alpha);
 
 	// Отрисовка Земли
 	earth->render(camera->getView(), camera->getProjection(), shaderProgram);
 
-	satelliteRenderer.renderSatellites(camera->getView(), camera->getProjection(), satelliteManager->getSatelliteStates());
+	{
+		std::lock_guard<std::mutex> lock(dataMutex);
+		satelliteRenderer.renderSatellites(camera->getView(), camera->getProjection(), cachedSatelliteStates, true);
+	}
+	
 	/*satelliteRenderer.renderOrbits(camera->getView(), camera->getProjection(), satelliteManager->getSatelliteStates(),
 		satelliteManager->getModels(), timeManager->getCurrentJulianDate());*/
 
@@ -338,4 +364,11 @@ bool Application::initializeManagers()
 	for (const auto& groupName : dataManager->getAllGroupNames()) {
 		filters.emplace(groupName, true);
 	}
+
+	{
+		std::lock_guard<std::mutex> lock(dataMutex);
+		cachedSatelliteStates.clear();
+	}
+
+	return true;
 }

@@ -14,6 +14,9 @@
 #include <string>
 #include <chrono>
 #include <thread>
+#include <mutex>
+#include <atomic>
+#include <future>
 #include <unordered_map>
 
 #include "render/Earth.h"
@@ -36,22 +39,6 @@ struct InputParameters {
 	float //lightPos[3] = { 2.0f, 3.0f, 3.0f },
 		lightColor[3] = { 1.0f, 1.0f, 1.0f };
 	float nightTextureIntensity = 0.4f;
-};
-
-struct Filters {
-	bool isStarlink = true;
-	bool isGLONASS = true;
-	bool isGalileo = true;
-	bool isBeiDou = true;
-	bool isWeather = true;
-	bool isISS = true;
-	bool isSpaceStations = true;
-	bool isScientific = true;
-	bool isGeostationary = true;
-	bool isLowEarthOrbit = true;
-	bool isMediumEarthOrbit = true;
-	bool isHighEarthOrbit = true;
-	bool isOther = true;
 };
 
 class Application
@@ -88,6 +75,11 @@ private:
 	MouseState mouseState;
 	InputParameters inputParams;
 	std::unordered_map<std::string, bool> filters;
+
+	std::atomic<bool> updateInProgress = false;
+	std::future<void> updateFuture;
+	std::mutex dataMutex;
+	std::vector<SatelliteState> cachedSatelliteStates;
 
 	std::shared_ptr<DataManager> dataManager;
 	void loadDataFromDatabase(const std::string& backupPath);

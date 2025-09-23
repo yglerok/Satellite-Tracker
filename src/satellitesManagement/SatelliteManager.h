@@ -6,7 +6,6 @@
 #include <memory>
 #include <map>
 #include <vector>
-#include <mutex>
 #include <glm/glm.hpp>
 #include <unordered_map>
 
@@ -33,7 +32,7 @@ public:
     // Подписка на события обновления данных
     void setEventBus(EventBus* bus);
 
-    const std::vector<SatelliteState> getSatelliteStates() const { return visibleSatelliteStates; }
+    const std::vector<SatelliteState> getSatelliteStates() const { return satelliteStates; }
     const SatelliteState* getSatelliteState(int noradId) const;
 
     // Преобразование координат из TEME в ECEF
@@ -50,8 +49,6 @@ public:
     const std::map<int, std::shared_ptr<Sgp4Model>>& getModels() const { return models; }
 
 private:
-    std::mutex mtx;
-
     struct SatelliteData {
         std::shared_ptr<const Sgp4Model> model; // Неизменяемая модель
         SatelliteState currentState;
@@ -71,7 +68,7 @@ private:
     std::shared_ptr<DataManager> dataManager;
     EventBus* eventBus = nullptr;
 
-    std::vector<SatelliteState> visibleSatelliteStates; // Актуальный список для рендерера
+    std::vector<SatelliteState> satelliteStates; // Актуальный список для рендерера
 
     std::unordered_map<std::string, bool> currentFilterGroups;
 };
