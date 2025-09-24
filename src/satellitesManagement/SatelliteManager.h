@@ -27,13 +27,15 @@ public:
     ~SatelliteManager() = default;
 
     bool initialize();
-    void update(double utcJd); // Главный метод обновления на заданное Юлианское время (UTC)
+    void update(double utcJd, double orbitDurationHours, int orbitSegments); // Главный метод обновления на заданное Юлианское время (UTC)
 
     // Подписка на события обновления данных
     void setEventBus(EventBus* bus);
 
     const std::vector<SatelliteState> getSatelliteStates() const { return satelliteStates; }
     const SatelliteState* getSatelliteState(int noradId) const;
+
+    const std::map<int, std::vector<glm::vec3>> getOrbitCache() const { return orbitCache; }
 
     // Преобразование координат из TEME в ECEF
     // TEME - система координат, зафиксированная относительно звезд. Ее оси не вращаются с Землей
@@ -64,6 +66,11 @@ private:
     void loadModelsFromDatabase();
 
     bool isSatelliteVisible(int noradId) const;
+
+    std::map<int, std::vector<glm::vec3>> orbitCache; // Кэш рассчитанных орбит по NORAD ID
+    void calcOrbits(const std::shared_ptr<struct Sgp4Model>& model, double startTimeJd,
+        double durationHours, int segments, glm::vec3& outPoints);
+    void updateOrbitCache(double currentJulianDate, double durationHours, int segments);
 
     std::shared_ptr<DataManager> dataManager;
     EventBus* eventBus = nullptr;

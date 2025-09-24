@@ -12,7 +12,7 @@ bool SatelliteManager::initialize()
 	return true;
 }
 
-void SatelliteManager::update(double utcJd)
+void SatelliteManager::update(double utcJd, double orbitDurationHours, int orbitSegments)
 {
 	satelliteStates.clear();
 	satelliteStates.reserve(satelliteData.size());
@@ -39,6 +39,9 @@ void SatelliteManager::update(double utcJd)
 			glm::dvec3 positionEcef, velocityEcef;
 			temeToEcef(utcJd, positionTeme, velocityTeme, positionEcef, velocityEcef);
 
+			// Сохраняем предыдущее положение в кэш орбиты
+			//orbitCache[noradId].push_back(glm::vec3(satData.currentState.positionEcef));
+
 			// 4. Обновляем состояние
 			satData.currentState.positionEcef = positionEcef;
 			satData.currentState.velocityEcef = velocityEcef;
@@ -46,16 +49,19 @@ void SatelliteManager::update(double utcJd)
 			// 5. Применяем фильтр
 			satData.currentState.isVisible = isSatelliteVisible(noradId);
 
-			// 6. Добавляем в список видимых
+			// 6. Добавляем в список
 			satelliteStates.push_back(satData.currentState);
 
+			// обновляем орбиты
 		}
 		else {
 			std::cerr << "Failed to calculate position for satellite: " << satData.currentState.name << std::endl;
 			satData.isActive = false;
 		}
-				
+
 	}
+
+	updateOrbitCache(utcJd, orbitDurationHours, orbitSegments);
 }
 
 void SatelliteManager::setEventBus(EventBus* bus)
@@ -156,4 +162,70 @@ bool SatelliteManager::isSatelliteVisible(int noradId) const
 	}
 
 	return false;
+}
+
+void SatelliteManager::updateOrbitCache(double currentJulianDate, double durationHours, int segments)
+{
+	// Очищаем кэш для неактивных спутников
+	std::vector<int> toRemove;
+
+	for (const auto& [noradId, _] : orbitCache) {
+		if (models.find(noradId) == models.end())
+			toRemove.push_back(noradId);
+	}
+
+	for (int id : toRemove)
+		orbitCache.erase(id);
+
+	// Обновляем орбиты для всех моделей
+	for (const auto& [noradId, model] : models) {
+		// Пересчитываем орбиту, если ее нет в кэше или прошло много времени
+		//if (orbitCache.find(noradId) == orbitCache.end()) {
+			glm::vec3 orbitPoints;
+			calcOrbits(model, currentJulianDate, durationHours, segments, orbitPoints);
+			orbitCache[noradId].push_back(orbitPoints);
+		//}
+	}
+}
+
+void SatelliteManager::calcOrbits(const std::shared_ptr<struct Sgp4Model>& model, double startTimeJd,
+	double durationHours, int segments, glm::vec3& outPoints)
+{
+	//outPoints.clear();
+	if (!model || !model->isValid())
+		return;
+
+	double epochJd = model->getEpochJulianDate();
+	/*double durationMinutes = durationHours * 60.0;
+	double timeStep = durationMinutes / segments;*/
+
+	double startMinutesFromEpoch = (startTimeJd - epochJd) * 24.0 * 60.0;
+
+	//for (int i = 0; i <= segments; ++i) {
+		//double minutesSinceEpoch = startMinutesFromEpoch - i * timeStep;
+		if (std::abs(startMinutesFromEpoch) > 7 * 24 * 60) { // 7 дней
+			return;
+		}
+
+		glm::dvec3 positionTeme, velocityTeme;
+		if (model->calcPosition(startMinutesFromEpoch, positionTeme, velocityTeme)) {
+			// Текущая юлианская дата для данной точки орбиты
+			double pointTimeJd = epochJd + (startMinutesFromEpoch / (24.0 * 60.0));
+
+			// TEME -> ECEF
+			glm::dvec3 positionEcef, velocityEcef;
+			SatelliteManager::temeToEcef(pointTimeJd, positionTeme, velocityTeme, positionEcef, velocityEcef);
+
+			// Масштабируем позицию
+			glm::dvec3 scaledPosition = positionEcef / 6371.0;
+			scaledPosition = glm::vec3(scaledPosition.x, scaledPosition.z, -scaledPosition.y);
+
+			outPoints = glm::vec3(scaledPosition);
+		}
+	//}
+	// Если орбита получилась слишком короткой, добавляем точки
+	/*if (outPoints.size() < 2) {
+		std::cerr << "Warning: Orbit calculation failed for satellite" << std::endl;
+		outPoints.clear();
+	}*/
 }

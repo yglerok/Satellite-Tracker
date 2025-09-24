@@ -5,7 +5,7 @@
 #include <cmath>
 
 SatelliteRenderer::SatelliteRenderer() : satelliteColor(1.0f, 0.0f, 0.0f),
-	satelliteSize(10.0f), orbitColor(0.0f, 0.0f, 1.0f), orbitSegments(100),
+	satelliteSize(2.0f), orbitColor(1.0f, 1.0f, 1.0f), orbitSegments(100),
 	orbitDurationHours(2.0), showOrbits(true), showSatellites(true)
 {
 }
@@ -41,6 +41,8 @@ void SatelliteRenderer::renderSatellites(const glm::mat4& view, const glm::mat4&
 		return;
 	}
 
+	glEnable(GL_PROGRAM_POINT_SIZE);
+
 	glUseProgram(satelliteShader);
 
 	Shader::setMat4(satelliteShader, "view", view);
@@ -64,13 +66,14 @@ void SatelliteRenderer::renderSatellites(const glm::mat4& view, const glm::mat4&
 }
 
 void SatelliteRenderer::renderOrbits(const glm::mat4& view, const glm::mat4& projection, 
-	const std::vector<SatelliteState>& satellites, 
-	const std::map<int, std::shared_ptr<struct Sgp4Model>>& models, double currentJulianDate)
+	const std::vector<SatelliteState>& satellites, std::map<int, std::vector<glm::vec3>> orbitCache,
+	bool onlyVisible)
 {
 	if (!showOrbits || satellites.empty())
 		return;
 
-	updateOrbitCache(models, currentJulianDate);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	glUseProgram(orbitShader);
 
@@ -81,7 +84,7 @@ void SatelliteRenderer::renderOrbits(const glm::mat4& view, const glm::mat4& pro
 	glBindVertexArray(orbitVAO);
 
 	for (const auto& satellite : satellites) {
-		if (!satellite.isVisible)
+		if (onlyVisible && !satellite.isVisible)
 			continue;
 
 		auto orbitIt = orbitCache.find(satellite.noradId);
@@ -100,6 +103,7 @@ void SatelliteRenderer::renderOrbits(const glm::mat4& view, const glm::mat4& pro
 	}
 
 	glBindVertexArray(0);
+	glDisable(GL_BLEND);
 }
 
 bool SatelliteRenderer::compileShaders()
@@ -178,71 +182,3 @@ void SatelliteRenderer::renderSatellite(const SatelliteState& satellite, const g
 	}
 }
 
-void SatelliteRenderer::calcOrbits(const std::shared_ptr<struct Sgp4Model>& model, double startTimeJd, 
-	double durationHours, int segments, std::vector<glm::vec3>& outPoints)
-{
-	outPoints.clear();
-	if (!model || !model->isValid())
-		return;
-
-	outPoints.reserve(segments + 1);
-
-	double epochJd = model->getEpochJulianDate();
-	double durationMinutes = durationHours * 60.0;
-	double timeStep = durationMinutes / segments;
-
-	double startMinutesFromEpoch = (startTimeJd - epochJd) * 24.0 * 60.0;
-
-	for (int i = 0; i <= segments; ++i) {
-		double minutesSinceEpoch = startMinutesFromEpoch + i * timeStep;
-		if (std::abs(minutesSinceEpoch) > 7 * 24 * 60) { // 7 дней
-			return;
-		}
-
-		glm::dvec3 positionTeme, velocityTeme;
-		if (model->calcPosition(minutesSinceEpoch, positionTeme, velocityTeme)) {
-			// Текущая юлианская дата для данной точки орбиты
-			double pointTimeJd = epochJd + (minutesSinceEpoch / (24.0 * 60.0));
-
-			// TEME -> ECEF
-			glm::dvec3 positionEcef, velocityEcef;
-			SatelliteManager::temeToEcef(pointTimeJd, positionTeme, velocityTeme, positionEcef, velocityEcef);
-
-			// Масштабируем позицию
-			glm::dvec3 scaledPosition = positionEcef / 6371.0;
-
-			outPoints.push_back(glm::vec3(scaledPosition));
-		}
-	}
-	// Если орбита получилась слишком короткой, добавляем точки
-	if (outPoints.size() < 2) {
-		std::cerr << "Warning: Orbit calculation failed for satellite" << std::endl;
-		outPoints.clear();
-	}
-
-}
-
-void SatelliteRenderer::updateOrbitCache(const std::map<int, std::shared_ptr<struct Sgp4Model>>& models,
-	double currentJulianDate)
-{
-	// Очищаем кэш для неактивных спутников
-	std::vector<int> toRemove;
-
-	for (const auto& [noradId, _] : orbitCache) {
-		if (models.find(noradId) == models.end())
-			toRemove.push_back(noradId);
-	}
-
-	for (int id : toRemove)
-		orbitCache.erase(id);
-
-	// Обновляем орбиты для всех моделей
-	for (const auto& [noradId, model] : models) {
-		// Пересчитываем орбиту, если ее нет в кэше или прошло много времени
-		if (orbitCache.find(noradId) == orbitCache.end()) {
-			std::vector<glm::vec3> orbitPoints;
-			calcOrbits(model, currentJulianDate, orbitDurationHours, orbitSegments, orbitPoints);
-			orbitCache[noradId] = orbitPoints;
-		}
-	}
-}

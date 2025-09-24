@@ -80,6 +80,7 @@ private:
 	std::future<void> updateFuture;
 	std::mutex dataMutex;
 	std::vector<SatelliteState> cachedSatelliteStates;
+	std::map<int, std::vector<glm::vec3>> orbitCache;
 
 	std::shared_ptr<DataManager> dataManager;
 	void loadDataFromDatabase(const std::string& backupPath);

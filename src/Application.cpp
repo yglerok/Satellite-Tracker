@@ -205,10 +205,11 @@ void Application::update(double dt)
 
 		updateFuture = std::async(std::launch::async, [this]() {
 			try {
-				satelliteManager->update(timeManager->getCurrentJulianDate());
+				satelliteManager->update(timeManager->getCurrentJulianDate(), 2.0, 100);//
 
 				std::lock_guard<std::mutex> lock(dataMutex);
 				cachedSatelliteStates = satelliteManager->getSatelliteStates();
+				orbitCache = satelliteManager->getOrbitCache();
 			}
 			catch (const std::exception& e) {
 				std::cerr << "ERROR in satellite update thread: " << e.what() << std::endl;
@@ -249,10 +250,9 @@ void Application::render(double alpha)
 	{
 		std::lock_guard<std::mutex> lock(dataMutex);
 		satelliteRenderer.renderSatellites(camera->getView(), camera->getProjection(), cachedSatelliteStates, true);
+		satelliteRenderer.renderOrbits(camera->getView(), camera->getProjection(), cachedSatelliteStates, 
+			orbitCache, true);
 	}
-	
-	/*satelliteRenderer.renderOrbits(camera->getView(), camera->getProjection(), satelliteManager->getSatelliteStates(),
-		satelliteManager->getModels(), timeManager->getCurrentJulianDate());*/
 
 	ImGuiIO& io = ImGui::GetIO();
 	io.DisplaySize.x = static_cast<float>(width);
@@ -368,6 +368,7 @@ bool Application::initializeManagers()
 	{
 		std::lock_guard<std::mutex> lock(dataMutex);
 		cachedSatelliteStates.clear();
+		orbitCache.clear();
 	}
 
 	return true;

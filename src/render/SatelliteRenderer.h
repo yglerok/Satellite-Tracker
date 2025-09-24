@@ -19,9 +19,8 @@ public:
 	void renderSatellites(const glm::mat4& view, const glm::mat4& projection,
 		const std::vector<SatelliteState>& satellites, bool onlyVisible);
 	void renderOrbits(const glm::mat4& view, const glm::mat4& projection,
-		const std::vector<SatelliteState>& satellites,
-		const std::map<int, std::shared_ptr<struct Sgp4Model>>& models,
-		double currentJulianDate);
+		const std::vector<SatelliteState>& satellites, std::map<int, std::vector<glm::vec3>> orbitCache,
+		bool onlyVisible);
 
 	// Настройка внешнего вида
 	void setSatelliteColor(const glm::vec3& color) { satelliteColor = color; };
@@ -42,7 +41,7 @@ private:
 	// Для рендера орбит
 	GLuint orbitShader;
 	GLuint orbitVAO, orbitVBO;
-	std::map<int, std::vector<glm::vec3>> orbitCache; // Кэш рассчитанных орбит по NORAD ID
+	//std::map<int, std::vector<glm::vec3>> orbitCache; // Кэш рассчитанных орбит по NORAD ID
 
 	// Настройка рендера
 	glm::vec3 satelliteColor;
@@ -59,9 +58,4 @@ private:
 
 	void renderSatellite(const SatelliteState& satellite, const glm::mat4& view,
 		const glm::mat4& projection);
-
-	void calcOrbits(const std::shared_ptr<struct Sgp4Model>& model,
-		double startTimeJd, double durationHours, int segments, std::vector<glm::vec3>& outPoints);
-	void updateOrbitCache(const std::map<int, std::shared_ptr<struct Sgp4Model>>& models,
-		double currentJulianDate);
 };
