@@ -92,8 +92,6 @@ void SatelliteRenderer::renderOrbits(const glm::mat4& view, const glm::mat4& pro
 			continue;
 
 		const auto& orbitPoints = orbitIt->second;
-		if (orbitPoints.size() < 2)
-			continue;
 
 		// Обновляем буфер с точками орбиты
 		glBindBuffer(GL_ARRAY_BUFFER, orbitVBO);

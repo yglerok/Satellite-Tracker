@@ -14,6 +14,7 @@ bool SatelliteManager::initialize()
 
 void SatelliteManager::update(double utcJd, double orbitDurationHours, int orbitSegments)
 {
+	static unsigned int updateCounter = 0;
 	satelliteStates.clear();
 	satelliteStates.reserve(satelliteData.size());
 
@@ -39,12 +40,18 @@ void SatelliteManager::update(double utcJd, double orbitDurationHours, int orbit
 			glm::dvec3 positionEcef, velocityEcef;
 			temeToEcef(utcJd, positionTeme, velocityTeme, positionEcef, velocityEcef);
 
-			// Сохраняем предыдущее положение в кэш орбиты
-			//orbitCache[noradId].push_back(glm::vec3(satData.currentState.positionEcef));
-
 			// 4. Обновляем состояние
 			satData.currentState.positionEcef = positionEcef;
 			satData.currentState.velocityEcef = velocityEcef;
+
+			// Сохраняем положение в кэш орбиты
+			// Масштабируем позицию
+			if (++updateCounter % 5 == 0) {
+				glm::dvec3 scaledPosition = positionEcef / 6371.0;
+				scaledPosition = glm::vec3(scaledPosition.x, scaledPosition.z, -scaledPosition.y);
+				orbitCache[noradId].push_back(glm::vec3(scaledPosition));
+			}
+			
 
 			// 5. Применяем фильтр
 			satData.currentState.isVisible = isSatelliteVisible(noradId);
@@ -61,7 +68,7 @@ void SatelliteManager::update(double utcJd, double orbitDurationHours, int orbit
 
 	}
 
-	updateOrbitCache(utcJd, orbitDurationHours, orbitSegments);
+	//updateOrbitCache(utcJd, orbitDurationHours, orbitSegments);
 }
 
 void SatelliteManager::setEventBus(EventBus* bus)
