@@ -5,7 +5,7 @@
 #include <cmath>
 
 SatelliteRenderer::SatelliteRenderer() : satelliteColor(1.0f, 0.0f, 0.0f),
-	satelliteSize(2.0f), orbitColor(1.0f, 1.0f, 1.0f), orbitSegments(100),
+	satelliteSize(1.0f), orbitColor(1.0f, 1.0f, 1.0f), orbitSegments(100),
 	orbitDurationHours(2.0), showOrbits(true), showSatellites(true)
 {
 }

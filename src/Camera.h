@@ -19,6 +19,7 @@ public:
 
 	glm::mat4 getProjection() const { return projection; }
 	glm::mat4 getView() const { return view; }
+	float getRadius() const { return radius.current; }
 
 private:
 	struct Position {

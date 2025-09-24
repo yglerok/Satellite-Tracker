@@ -247,6 +247,10 @@ void Application::render(double alpha)
 	// Отрисовка Земли
 	earth->render(camera->getView(), camera->getProjection(), shaderProgram);
 
+	// Вычисление размера спутников в зависимости от отдаления камеры (используем линейную интерполяцию)
+	float satelliteSize = 5.0f + (camera->getRadius() - 3.0f) * (0.5f - 5.0f) / (20.0f - 3.0f);
+	satelliteRenderer.setSatelliteSize(satelliteSize);
+
 	{
 		std::lock_guard<std::mutex> lock(dataMutex);
 		satelliteRenderer.renderSatellites(camera->getView(), camera->getProjection(), cachedSatelliteStates, true);
@@ -281,24 +285,18 @@ void Application::render(double alpha)
 		ImGui::Text("...");
 		ImGui::Text("Displaing groups:");
 		ImGui::SameLine();
-		ImGui::Button("Select all");
+		if (ImGui::Button("Select all")) {
+			for (auto& [filter, state] : filters)
+				state = true;
+		}
 		ImGui::SameLine();
-		ImGui::Button("Unselect all");
+		if (ImGui::Button("Unselect all")) {
+			for (auto& [filter, state] : filters)
+				state = false;
+		}
 		for (auto& [filter, state] : filters) {
 			ImGui::Checkbox(filter.c_str(), &state);
 		}
-		/*ImGui::Checkbox("GLONASS", &filters["isGLONASS"]);
-		ImGui::Checkbox("Galileo", &filters["isGalileo"]);
-		ImGui::Checkbox("BeiDou", &filters["isBeiDou"]);
-		ImGui::Checkbox("Weather", &filters["isWeather"]);
-		ImGui::Checkbox("ISS", &filters["isISS"]);
-		ImGui::Checkbox("Space Stations", &filters["isSpaceStations"]);
-		ImGui::Checkbox("Scientific", &filters["isScientific"]);
-		ImGui::Checkbox("Geostationary", &filters["isGeostationary"]);
-		ImGui::Checkbox("Low Earth Orbit", &filters["isLowEarthOrbit"]);
-		ImGui::Checkbox("Medium Earth Orbit", &filters["isMediumEarthOrbit"]);
-		ImGui::Checkbox("High Earth Orbit", &filters["isHighEarthOrbit"]);
-		ImGui::Checkbox("Other", &filters["isOther"]);*/
 
 		satelliteManager->setGroupFilters(filters);
 	}
