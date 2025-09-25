@@ -19,6 +19,8 @@ public:
 	~Earth();
 	
 	void render(const glm::mat4& view, const glm::mat4& projection, GLuint shader) const;
+	void renderSunDirection(const glm::mat4& view, const glm::mat4& projection,
+		const glm::vec3& sunDir);
 
 private:
 	std::vector<Vertex> vertices; 

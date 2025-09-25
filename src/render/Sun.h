@@ -21,13 +21,14 @@ public:
 	~Sun() = default;
 
 	void setLightning(GLuint shaderProgram);
+	glm::vec3 getDirection(); // Получение вектора направления на Солнце
 
 private:
 	//bool getLocalTime(const time_t* time, struct tm* result); // кроссплатформенная реализация localtime()
 	double getEclipticLongitude(const double& jd); // Расчёт эклиптической долготы Солнца
 	void getEquatorialCoords(double lambda, double beta, double epsilon,
 		double& ra, double& dec); // Переход в экваториальные координаты
-	glm::vec3 getDirection(); // Получение вектора направления на Солнце
+	
 	const float distance = 1496.0f;
 
 	std::shared_ptr<TimeManager> timeManager;

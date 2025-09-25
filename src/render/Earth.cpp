@@ -298,3 +298,47 @@ void Earth::render(const glm::mat4& view, const glm::mat4& projection, GLuint sh
     //glUseProgram(shader);
     //glEnable(GL_DEPTH_TEST);
 }
+
+void Earth::renderSunDirection(const glm::mat4& view, const glm::mat4& projection,
+    const glm::vec3& sunDir)
+{
+    // Визуализация направления к Солнцу (красная линия от центра Земли)
+    std::vector<glm::vec3> sunLine = {
+        glm::vec3(0.0f, 0.0f, 0.0f),
+        sunDir * 2.0f  // Удлиненная линия в направлении Солнца
+    };
+
+    // Отрисовка линии
+    glUseProgram(axesShader);
+
+    // Передача матриц
+    Shader::setMat4(axesShader, "model", model);
+    Shader::setMat4(axesShader, "view", view);
+    Shader::setMat4(axesShader, "projection", projection);
+
+    // Создаем временные буферы
+    GLuint sunVAO, sunVBO;
+    glGenVertexArrays(1, &sunVAO);
+    glGenBuffers(1, &sunVBO);
+
+    // Настраиваем VAO
+    glBindVertexArray(sunVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, sunVBO);
+    glBufferData(GL_ARRAY_BUFFER, sunLine.size() * sizeof(glm::vec3),
+        sunLine.data(), GL_STATIC_DRAW);
+
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void*)0);
+
+    // Устанавливаем желтый цвет для линии Солнца
+    Shader::setVec3(axesShader, "color", glm::vec3(1.0f, 1.0f, 0.0f)); // Желтый
+
+    // Рисуем линию
+    glBindVertexArray(sunVAO);
+    glDrawArrays(GL_LINES, 0, 2);
+    glBindVertexArray(0);
+
+    // Очищаем временные буферы
+    glDeleteVertexArrays(1, &sunVAO);
+    glDeleteBuffers(1, &sunVBO);
+}

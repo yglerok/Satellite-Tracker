@@ -22,12 +22,23 @@ glm::vec3 Sun::getDirection()
 
     getEquatorialCoords(lambda, beta, epsilon, ra, dec);
 
-    double ra_rad = ra * DEG_TO_RAD;
+    // ВЫЧИСЛЯЕМ ЧАСОВОЙ УГОЛ с учетом звездного времени
+    double GMST = 280.46061837 + 360.98564736629 * (jd - 2451545.0)
+        + 0.000387933 * T * T - T * T * T / 38710000.0;
+    GMST = fmod(GMST, 360.0);
+    if (GMST < 0) GMST += 360.0;
+
+    double hourAngle = GMST - ra; // Часовой угол в градусах
+    if (hourAngle < 0) hourAngle += 360.0;
+
+
+    // Преобразуем в радианы
+    double ha_rad = hourAngle * DEG_TO_RAD;
     double dec_rad = dec * DEG_TO_RAD;
 
     glm::vec3 dir = glm::vec3(
-        cos(dec_rad) * cos(ra_rad), 
-        cos(dec_rad) * sin(ra_rad),
+        cos(dec_rad) * cos(ha_rad),
+        cos(dec_rad) * sin(ha_rad),
         sin(dec_rad) 
     );
 
@@ -45,10 +56,30 @@ glm::vec3 Sun::getDirection()
         -dir.x  // север (весеннее равноденствие -> юг)
     );
 
-    std::cout << "sceneDir: " << glm::normalize(sceneDir).x << ", "
-        << glm::normalize(sceneDir).y << ", " << glm::normalize(sceneDir).z << std::endl;
+    std::cout << "=== SUN DEBUG ===" << std::endl;
+    std::cout << "JD: " << jd << std::endl;
+    std::cout << "RA: " << ra << "°, Dec: " << dec << "°" << std::endl;
+    std::cout << "GMST: " << GMST << "°" << std::endl;
+    std::cout << "Hour angle: " << hourAngle << "°" << std::endl;
+    std::cout << "Local direction: " << dir.x << ", " << dir.y << ", " << dir.z << std::endl;
 
-    return glm::normalize(sceneDir);
+    std::cout << "OpenGL direction: " << sceneDir.x << ", " << sceneDir.y << ", " << sceneDir.z << std::endl;
+
+    // Проверка положения Солнца
+    if (hourAngle < 180.0) {
+        std::cout << "Sun is on EASTERN hemisphere (rising)" << std::endl;
+    }
+    else {
+        std::cout << "Sun is on WESTERN hemisphere (setting)" << std::endl;
+    }
+
+   /* std::cout << "sceneDir: " << glm::normalize(sceneDir).x << ", "
+        << glm::normalize(sceneDir).y << ", " << glm::normalize(sceneDir).z << std::endl;*/
+
+    // Инвертируем направление, потому что:
+    // - Астрономические вычисления дают направление ИЗ центра Земли К Солнцу  
+    // - Для освещения в OpenGL нужно направление ОТ Солнца К Земле
+    return -glm::normalize(sceneDir);
 }
 
 Sun::Sun(std::shared_ptr<TimeManager> timeManager)
@@ -119,6 +150,23 @@ void Sun::getEquatorialCoords(double lambda, double beta, double epsilon,
     ra = atan2(y, x) * RAD_TO_DEG;
     if (ra < 0)
         ra += 360.0;
+
+    double jd = timeManager->getCurrentJulianDate();
+    double T = (jd - 2451545.0) / 36525.0;
+
+    // Звездное время в Гринвиче (градусы)
+    double GMST = 280.46061837 + 360.98564736629 * (jd - 2451545.0)
+        + 0.000387933 * T * T - T * T * T / 38710000.0;
+    GMST = fmod(GMST, 360.0);
+    if (GMST < 0) GMST += 360.0;
+
+    // Прямое восхождение с учетом времени суток
+    double lst = GMST; // Для UTC+0
+    double hourAngle = lst - ra;
+    if (hourAngle < 0) hourAngle += 360.0;
+
+    std::cout << "GMST: " << GMST << "°" << std::endl;
+    std::cout << "Hour angle: " << hourAngle << "°" << std::endl;
 
     std::cout << "ra = " << ra << std::endl;
     std::cout << "dec = " << dec << std::endl;

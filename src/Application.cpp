@@ -78,6 +78,7 @@ void Application::start()
 	// сделать здесь динамическое создание
 	sun = std::make_unique<Sun>(timeManager);
 	sun->setLightning(shaderProgram);
+	sunDir = sun->getDirection();
 
 	auto previousTime = std::chrono::steady_clock::now();
 	double lag = 0.0;
@@ -243,6 +244,8 @@ void Application::render(double alpha)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	camera->render(alpha);
+
+	earth->renderSunDirection(camera->getView(), camera->getProjection(), sunDir);
 
 	// Отрисовка Земли
 	earth->render(camera->getView(), camera->getProjection(), shaderProgram);

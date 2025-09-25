@@ -69,6 +69,7 @@ private:
 	Camera* camera;
 	Earth* earth = nullptr;
 	std::unique_ptr<Sun> sun;
+	glm::vec3 sunDir;
 
 	const float mouseSensitivity = 0.01f;
 

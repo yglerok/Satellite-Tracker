@@ -2,7 +2,6 @@
 out vec4 FragColor;
 
 uniform vec3 color;
-uniform float size;
 
 void main() {
     vec2 coord = gl_PointCoord - vec2(0.5);
