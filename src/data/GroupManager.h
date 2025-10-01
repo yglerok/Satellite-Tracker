@@ -36,6 +36,7 @@ private:
 	bool isGNSSSatellite(const SatelliteTle& satellite) const;
 	bool isSpaceStation(const SatelliteTle& satellite) const;
 	bool isScientificSatellite(const SatelliteTle& satellite) const;
+	bool isISS(const SatelliteTle& satellite) const;
 	void categorizeByOrbit(const SatelliteTle& satellite);
 
 	std::shared_ptr<Database> database;

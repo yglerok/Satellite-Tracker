@@ -29,6 +29,12 @@ void SatelliteManager::update(double utcJd, double orbitDurationHours, int orbit
 		// 1. Рассчитываем время, прошедшее с эпохи TLE (в минутах)
 		double minutesSinceEpoch = (utcJd - epochJD) * 24.0 * 60.0;
 
+		// ДОБАВЬТЕ ЭТУ ОТЛАДКУ:
+		/*std::cout << "Satellite: " << satData.currentState.name
+			<< " | Epoch JD: " << std::fixed << std::setprecision(8) << epochJD
+			<< " | Minutes since epoch: " << minutesSinceEpoch
+			<< " | Days since epoch: " << minutesSinceEpoch / (24.0 * 60.0) << std::endl;*/
+
 		if (std::abs(minutesSinceEpoch) > 7 * 24 * 60) { // 7 дней
 			continue;
 		}
@@ -48,7 +54,7 @@ void SatelliteManager::update(double utcJd, double orbitDurationHours, int orbit
 			// Масштабируем позицию
 			if (++updateCounter % 5 == 0) {
 				glm::dvec3 scaledPosition = positionEcef / 6371.0;
-				scaledPosition = glm::vec3(scaledPosition.x, scaledPosition.z, -scaledPosition.y);
+				scaledPosition = glm::vec3(scaledPosition.y, scaledPosition.z, -scaledPosition.x);
 				orbitCache[noradId].push_back(glm::vec3(scaledPosition));
 			}
 			
@@ -225,7 +231,7 @@ void SatelliteManager::calcOrbits(const std::shared_ptr<struct Sgp4Model>& model
 
 			// Масштабируем позицию
 			glm::dvec3 scaledPosition = positionEcef / 6371.0;
-			scaledPosition = glm::vec3(scaledPosition.x, scaledPosition.z, -scaledPosition.y);
+			scaledPosition = glm::vec3(scaledPosition.y, scaledPosition.z, -scaledPosition.x);
 
 			outPoints = glm::vec3(scaledPosition);
 		}

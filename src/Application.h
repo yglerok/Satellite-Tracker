@@ -7,10 +7,6 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include <imgui/imgui.h>
-#include <imgui/backends/imgui_impl_opengl3.h>
-#include <imgui/backends/imgui_impl_sdl3.h>
-
 #include <string>
 #include <chrono>
 #include <thread>
@@ -23,10 +19,10 @@
 #include "render/Shaders.h"
 #include "render/Sun.h"
 
+#include "UI.h"
 #include "Camera.h"
 #include "TimeManager.h"
 
-#include "data/DataManager.h"
 #include "render/SatelliteRenderer.h"
 
 static struct MouseState {
@@ -66,6 +62,7 @@ private:
 	SDL_Window* window = nullptr;
 	SDL_GLContext context;
 	GLuint shaderProgram = 0;
+	std::unique_ptr<UI> ui;
 	Camera* camera;
 	Earth* earth = nullptr;
 	std::unique_ptr<Sun> sun;
@@ -75,7 +72,6 @@ private:
 
 	MouseState mouseState;
 	InputParameters inputParams;
-	std::unordered_map<std::string, bool> filters;
 
 	std::atomic<bool> updateInProgress = false;
 	std::future<void> updateFuture;
@@ -86,7 +82,7 @@ private:
 	std::shared_ptr<DataManager> dataManager;
 	void loadDataFromDatabase(const std::string& backupPath);
 
-	std::unique_ptr<SatelliteManager> satelliteManager;
+	std::shared_ptr<SatelliteManager> satelliteManager;
 	SatelliteRenderer satelliteRenderer;
 
 	std::shared_ptr<TimeManager> timeManager;

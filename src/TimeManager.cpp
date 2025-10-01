@@ -83,9 +83,10 @@ double TimeManager::calcJulianDate(int year, int month, int day, int hour, int m
     // 1524.5 Ч сдвиг дл€ согласовани€ с астрономической эпохой
     //double jd = floor(365.25 * (year + 4716)) + floor(30.6001 * (month + 1)) + day + b - 1524.5;
     //jd += (hour + minute / 60.0 + second / 3600.0) / 24.0;
-    return 367 * year - floor(7 * (year + floor((month + 9) / 12)) / 4)
-        + floor(275 * month / 9) + day + 1721013.5
-        + (hour + minute / 60.0 + second / 3600.0) / 24.0;
+    double jd = floor(365.25 * (year + 4716)) + floor(30.6001 * (month + 1)) + day + b - 1524.5;
+    jd += (hour - 12.0) / 24.0 + minute / 1440.0 + second / 86400.0;
+
+    return jd;
 }
 
 void TimeManager::calcCurrentJulianDate()
@@ -103,6 +104,7 @@ void TimeManager::calcCurrentJulianDate()
         " " << hour << ":" << minute << ":" << second << std::endl;
 
     julianDate = calcJulianDate(year, month, day, hour, minute, second);
+
 }
 
 std::tm TimeManager::getUtcTime(time_t time)

@@ -26,6 +26,8 @@ add_executable(${PROJECT_NAME}
                 src/TimeManager.h
                 src/TimeManager.cpp
                 src/EventBus.h
+                src/UI.h
+                src/UI.cpp
                 src/render/Earth.h 
                 src/render/Earth.cpp
                 src/render/Sun.h 

@@ -219,6 +219,11 @@ bool GroupManager::isScientificSatellite(const SatelliteTle& satellite) const
         satellite.name.find("HST") != std::string::npos;
 }
 
+bool GroupManager::isISS(const SatelliteTle& satellite) const
+{
+    return satellite.name.find("ISS") != std::string::npos;
+}
+
 void GroupManager::categorizeByOrbit(const SatelliteTle& satellite)
 {
     // Анализируем вторую строку TLE для определения орбиты

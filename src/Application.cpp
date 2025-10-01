@@ -33,20 +33,6 @@ bool Application::init()
 		std::cerr << "ERROR [glad] Can't load GL!" << std::endl;
 		return false;
 	}
-	
-	if (!IMGUI_CHECKVERSION()) {
-		std::cerr << "ERROR [ImGui] In IMGUI_CHECKVERSION()!" << std::endl;
-		return false;
-	}
-	ImGui::CreateContext();
-	if (!ImGui_ImplOpenGL3_Init()) {
-		std::cerr << "ERROR [ImGui] Can't init ImplOpenGL3!" << std::endl;
-		return false;
-	}
-	if (!ImGui_ImplSDL3_InitForOpenGL(window, context)) {
-		std::cerr << "ERROR [ImGui] Can't init ImplSDL3 for OpenGL!" << std::endl;
-		return false;
-	}
 
 	if (!initializeManagers()) {
 		std::cerr << "Failed to init App!" << std::endl;
@@ -57,6 +43,9 @@ bool Application::init()
 		std::cerr << "Failed to init satelliteRenderer!" << std::endl;
 		return false;
 	}
+
+	ui = std::make_unique<UI>(width, height, dataManager, satelliteManager);
+	ui->initialize(window, &context);
 
 	return true;
 }
@@ -245,13 +234,14 @@ void Application::render(double alpha)
 
 	camera->render(alpha);
 
-	earth->renderSunDirection(camera->getView(), camera->getProjection(), sunDir);
+	//earth->renderSunDirection(camera->getView(), camera->getProjection(), sunDir);
 
 	// Отрисовка Земли
 	earth->render(camera->getView(), camera->getProjection(), shaderProgram);
 
 	// Вычисление размера спутников в зависимости от отдаления камеры (используем линейную интерполяцию)
 	float satelliteSize = 5.0f + (camera->getRadius() - 3.0f) * (0.5f - 5.0f) / (20.0f - 3.0f);
+	//float satelliteSize = 2.0f;
 	satelliteRenderer.setSatelliteSize(satelliteSize);
 
 	{
@@ -261,53 +251,7 @@ void Application::render(double alpha)
 			orbitCache, true);
 	}
 
-	ImGuiIO& io = ImGui::GetIO();
-	io.DisplaySize.x = static_cast<float>(width);
-	io.DisplaySize.y = static_cast<float>(height);
-
-	ImGui_ImplOpenGL3_NewFrame();
-	ImGui_ImplSDL3_NewFrame();
-	ImGui::NewFrame();
-
-	//ImGui::ShowDemoWindow();
-	//ImGui::Begin("Lightning settings", 0, ImGuiWindowFlags_AlwaysAutoResize);
-
-	//ImGui::DragFloat("Ambient strength", &inputParams.ambientStrength, 0.001f, 0.0f, 0.3f);
-	//ImGui::DragFloat("Specular strength", &inputParams.specularStrength, 0.01f, 0.0f, 1.0f);
-	////ImGui::DragFloat3("Light position (x, y, z)", inputParams.lightPos, 0.1f, -15.0f, 15.0f);
-	//ImGui::ColorEdit3("Light color", inputParams.lightColor);
-
-	//ImGui::End();
-
-	ImGui::Begin("Menu", 0, ImGuiWindowFlags_AlwaysAutoResize);
-	ImGui::SeparatorText("Time");
-	ImGui::Text(timeManager->getStringCurrentTime().c_str());
-
-	if (ImGui::CollapsingHeader("Filters")) {
-		//ImGui::SeparatorText("Info");
-		ImGui::Text("...");
-		ImGui::Text("Displaing groups:");
-		ImGui::SameLine();
-		if (ImGui::Button("Select all")) {
-			for (auto& [filter, state] : filters)
-				state = true;
-		}
-		ImGui::SameLine();
-		if (ImGui::Button("Unselect all")) {
-			for (auto& [filter, state] : filters)
-				state = false;
-		}
-		for (auto& [filter, state] : filters) {
-			ImGui::Checkbox(filter.c_str(), &state);
-		}
-
-		satelliteManager->setGroupFilters(filters);
-	}
-
-	ImGui::End();
-
-	ImGui::Render();
-	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+	ui->drawMenu(timeManager->getStringCurrentTime());
 }
 
 void Application::loadDataFromDatabase(const std::string& backupPath)
@@ -349,7 +293,7 @@ bool Application::initializeManagers()
 		return false;
 	}
 
-	satelliteManager = std::make_unique<SatelliteManager>(dataManager);
+	satelliteManager = std::make_shared<SatelliteManager>(dataManager);
 	if (!satelliteManager->initialize()) {
 		std::cerr << "Failed to initialize SatelliteManager" << std::endl;
 		return false;
@@ -360,11 +304,6 @@ bool Application::initializeManagers()
 
 	// Загрузка и сортировка спутников
 	loadDataFromDatabase(backupPath);
-
-	// Извлечение фильтров групп
-	for (const auto& groupName : dataManager->getAllGroupNames()) {
-		filters.emplace(groupName, true);
-	}
 
 	{
 		std::lock_guard<std::mutex> lock(dataMutex);

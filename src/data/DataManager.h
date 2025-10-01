@@ -28,7 +28,7 @@ public:
 	};
 
 	UpdateResult updateTleData(const std::string& backupFilePath,
-						const std::chrono::hours& updateInterval = std::chrono::hours(24));
+						const std::chrono::hours& updateInterval = std::chrono::hours(3));
 	bool forceUpdateTleFromNetwork();
 	bool forceUpdateTleFromFile(const std::string& filePath);
 

@@ -154,10 +154,8 @@ void SatelliteRenderer::renderSatellite(const SatelliteState& satellite, const g
 {
 	// Масштабируем для Earth radius = 1.0
 	glm::vec3 scaledPosition = glm::vec3(satellite.positionEcef) / 6371.0f;
-	/*std::cout << "  Scaled position: " << scaledPosition.x << ", "
-		<< scaledPosition.y << ", " << scaledPosition.z << std::endl;*/
 
-	scaledPosition = glm::vec3(scaledPosition.x, scaledPosition.z, -scaledPosition.y);
+	scaledPosition = glm::vec3(scaledPosition.y, scaledPosition.z, -scaledPosition.x);
 
 	// Создаем матрицу модели
 	glm::mat4 model = glm::mat4(1.0f);
