@@ -4,9 +4,11 @@
 #include <iomanip>
 #include <cmath>
 
-SatelliteRenderer::SatelliteRenderer() : satelliteColor(1.0f, 0.0f, 0.0f),
-	satelliteSize(1.0f), orbitColor(1.0f, 1.0f, 1.0f), orbitSegments(100),
-	orbitDurationHours(2.0), showOrbits(true), showSatellites(true)
+SatelliteRenderer::SatelliteRenderer(const RenderOptions& options) : 
+	satelliteColor(glm::vec4(options.satellitesColor[0], options.satellitesColor[1], options.satellitesColor[2], options.satellitesColor[3])),
+	satelliteSize(1.0f),
+	orbitColor(glm::vec4(options.orbitsColor[0], options.orbitsColor[1], options.orbitsColor[2], options.orbitsColor[3])),
+	showOrbits(true), showSatellites(true)
 {
 }
 
@@ -47,7 +49,7 @@ void SatelliteRenderer::renderSatellites(const glm::mat4& view, const glm::mat4&
 
 	Shader::setMat4(satelliteShader, "view", view);
 	Shader::setMat4(satelliteShader, "projection", projection);
-	Shader::setVec3(satelliteShader, "color", satelliteColor);
+	Shader::setVec4(satelliteShader, "color", satelliteColor);
 	Shader::setFloat(satelliteShader, "size", satelliteSize);
 
 	glBindVertexArray(satelliteVAO);
@@ -79,7 +81,7 @@ void SatelliteRenderer::renderOrbits(const glm::mat4& view, const glm::mat4& pro
 
 	Shader::setMat4(orbitShader, "view", view);
 	Shader::setMat4(orbitShader, "projection", projection);
-	Shader::setVec3(orbitShader, "color", orbitColor);
+	Shader::setVec4(orbitShader, "color", orbitColor);
 
 	glBindVertexArray(orbitVAO);
 
@@ -167,9 +169,6 @@ void SatelliteRenderer::renderSatellite(const SatelliteState& satellite, const g
 
 	// ƒеление на W дл€ получени€ NDC координат
 	glm::vec3 ndcPos = glm::vec3(clipPos) / clipPos.w;
-
-
-	//std::cout << "NDC position: " << ndcPos.x << ", " << ndcPos.y << ", " << ndcPos.z << std::endl;
 
 	// ≈сли координаты в допустимом диапазоне, рисуем
 	if (ndcPos.z > -1.0f && ndcPos.z < 1.0f) {

@@ -25,15 +25,9 @@ void SatelliteManager::update(double utcJd, double orbitDurationHours, int orbit
 			continue;
 
 		double epochJD = satData.model->getEpochJulianDate();
-		//std::cout << "Current epochJD: " << epochJD << std::endl;
+
 		// 1. Рассчитываем время, прошедшее с эпохи TLE (в минутах)
 		double minutesSinceEpoch = (utcJd - epochJD) * 24.0 * 60.0;
-
-		// ДОБАВЬТЕ ЭТУ ОТЛАДКУ:
-		/*std::cout << "Satellite: " << satData.currentState.name
-			<< " | Epoch JD: " << std::fixed << std::setprecision(8) << epochJD
-			<< " | Minutes since epoch: " << minutesSinceEpoch
-			<< " | Days since epoch: " << minutesSinceEpoch / (24.0 * 60.0) << std::endl;*/
 
 		if (std::abs(minutesSinceEpoch) > 7 * 24 * 60) { // 7 дней
 			continue;
@@ -57,6 +51,8 @@ void SatelliteManager::update(double utcJd, double orbitDurationHours, int orbit
 				scaledPosition = glm::vec3(scaledPosition.y, scaledPosition.z, -scaledPosition.x);
 				orbitCache[noradId].push_back(glm::vec3(scaledPosition));
 			}
+
+			orbitCache[noradId] = thinOrbitCache(orbitCache[noradId]);
 			
 
 			// 5. Применяем фильтр
@@ -199,6 +195,24 @@ void SatelliteManager::updateOrbitCache(double currentJulianDate, double duratio
 			orbitCache[noradId].push_back(orbitPoints);
 		//}
 	}
+}
+
+std::vector<glm::vec3> SatelliteManager::thinOrbitCache(const std::vector<glm::vec3>& points, int targetcount)
+{
+	if (points.size() < targetcount)
+		return points;
+	
+	std::vector<glm::vec3> result;
+	result.push_back(points[0]); // сохраняем первую точку
+
+	double step = double(points.size() - 1) / (targetcount - 1);
+	for (int i = 1; i < targetcount - 1; i++) {
+		size_t index = static_cast<size_t>(i * step);
+		result.push_back(points[index]);
+	}
+	result.push_back(points.back()); // сохраняем последнюю точку
+	
+	return result;
 }
 
 void SatelliteManager::calcOrbits(const std::shared_ptr<struct Sgp4Model>& model, double startTimeJd,

@@ -47,16 +47,19 @@ void UI::drawMenu(const std::string& timeString)
 	ImGui::Begin("Menu", 0, ImGuiWindowFlags_AlwaysAutoResize);
 	ImGui::SeparatorText("Time");
 	ImGui::Text(timeString.c_str());
-	if (ImGui::Button("Forced update from network")) {
+	ImGui::SeparatorText("Options");
+	ImGui::Checkbox("Show satellites", &renderOptions.areSatellitesVisible);
+	ImGui::SameLine();
+	ImGui::Checkbox("Show orbits", &renderOptions.areOrbitsVisible);
+	/*if (ImGui::Button("Forced update from network")) {
 		dataManager->forceUpdateTleFromNetwork();
 	}
 	if (ImGui::Button("Sort satellites")) {
 		dataManager->sortSatellitesIntoGroups();
-	}
+	}*/
 
 	if (ImGui::CollapsingHeader("Filters")) {
 		//ImGui::SeparatorText("Info");
-		ImGui::Text("...");
 		ImGui::Text("Displaing groups:");
 		ImGui::SameLine();
 		if (ImGui::Button("Select all")) {
@@ -73,6 +76,14 @@ void UI::drawMenu(const std::string& timeString)
 		}
 
 		satelliteManager->setGroupFilters(filters);
+	}
+
+	if (ImGui::CollapsingHeader("Color options")) {
+		ImGui::Text("Here you can choose colors for satellites and orbits.");
+		/*ImGui::Text("Satellites color:");
+		ImGui::SameLine();*/
+		ImGui::ColorEdit4("Satellites color", renderOptions.satellitesColor, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_AlphaBar);
+		ImGui::ColorEdit4("Orbits color", renderOptions.orbitsColor, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_AlphaBar);
 	}
 
 	ImGui::End();

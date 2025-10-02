@@ -9,10 +9,12 @@
 #include "Shaders.h"
 #include "../satellitesManagement/SatelliteManager.h"
 
+#include "../UI.h"
+
 class SatelliteRenderer
 {
 public:
-	SatelliteRenderer();
+	SatelliteRenderer(const RenderOptions& options);
 	~SatelliteRenderer();
 
 	bool initialize();
@@ -23,11 +25,9 @@ public:
 		bool onlyVisible);
 
 	// Настройка внешнего вида
-	void setSatelliteColor(const glm::vec3& color) { satelliteColor = color; };
+	void setSatelliteColor(const glm::vec4& color) { satelliteColor = color; };
 	void setSatelliteSize(float size) { satelliteSize = size; }
-	void setOrbitColor(const glm::vec3& color) { orbitColor = color; }
-	void setOrbitSegmentCount(int count) { orbitSegments = count; }
-	void setOrbitDurationHours(double hours) { orbitDurationHours = hours; }
+	void setOrbitColor(const glm::vec4& color) { orbitColor = color; }
 
 	void toggleOrbits(bool enabled) { showOrbits = enabled; }
 	void toggleSatellites(bool enabled) { showSatellites = enabled; }
@@ -41,14 +41,11 @@ private:
 	// Для рендера орбит
 	GLuint orbitShader;
 	GLuint orbitVAO, orbitVBO;
-	//std::map<int, std::vector<glm::vec3>> orbitCache; // Кэш рассчитанных орбит по NORAD ID
 
 	// Настройка рендера
-	glm::vec3 satelliteColor;
+	glm::vec4 satelliteColor;
 	float satelliteSize;
-	glm::vec3 orbitColor;
-	int orbitSegments;
-	double orbitDurationHours;
+	glm::vec4 orbitColor;
 	bool showOrbits;
 	bool showSatellites;
 

@@ -68,9 +68,11 @@ private:
     bool isSatelliteVisible(int noradId) const;
 
     std::map<int, std::vector<glm::vec3>> orbitCache; // Кэш рассчитанных орбит по NORAD ID
+    std::vector<glm::vec3> thinOrbitCache(const std::vector<glm::vec3>& points, int targetcount = 100);
     void calcOrbits(const std::shared_ptr<struct Sgp4Model>& model, double startTimeJd,
         double durationHours, int segments, glm::vec3& outPoints);
     void updateOrbitCache(double currentJulianDate, double durationHours, int segments);
+
 
     std::shared_ptr<DataManager> dataManager;
     EventBus* eventBus = nullptr;

@@ -18,12 +18,12 @@
 #include "render/Earth.h"
 #include "render/Shaders.h"
 #include "render/Sun.h"
+#include "render/SatelliteRenderer.h"
 
-#include "UI.h"
 #include "Camera.h"
 #include "TimeManager.h"
 
-#include "render/SatelliteRenderer.h"
+
 
 static struct MouseState {
 	bool isPressed = false;
@@ -36,6 +36,8 @@ struct InputParameters {
 		lightColor[3] = { 1.0f, 1.0f, 1.0f };
 	float nightTextureIntensity = 0.4f;
 };
+
+
 
 class Application
 {
@@ -72,6 +74,7 @@ private:
 
 	MouseState mouseState;
 	InputParameters inputParams;
+	RenderOptions renderOptions;
 
 	std::atomic<bool> updateInProgress = false;
 	std::future<void> updateFuture;
@@ -83,7 +86,7 @@ private:
 	void loadDataFromDatabase(const std::string& backupPath);
 
 	std::shared_ptr<SatelliteManager> satelliteManager;
-	SatelliteRenderer satelliteRenderer;
+	std::unique_ptr<SatelliteRenderer> satelliteRenderer;
 
 	std::shared_ptr<TimeManager> timeManager;
 	std::unique_ptr<EventBus> eventBus;

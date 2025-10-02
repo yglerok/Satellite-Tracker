@@ -139,7 +139,7 @@ bool GroupManager::sortSatellitesIntoGroups()
             categorized = true;
         }
 
-        categorizeByOrbit(satellite);
+        //categorizeByOrbit(satellite);
 
         if (categorized) 
             categorizedCount++;    

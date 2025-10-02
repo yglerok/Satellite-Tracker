@@ -39,12 +39,7 @@ bool Application::init()
 		return false;
 	}
 
-	if (!satelliteRenderer.initialize()) {
-		std::cerr << "Failed to init satelliteRenderer!" << std::endl;
-		return false;
-	}
-
-	ui = std::make_unique<UI>(width, height, dataManager, satelliteManager);
+	ui = std::make_unique<UI>(width, height, dataManager, satelliteManager, renderOptions);
 	ui->initialize(window, &context);
 
 	return true;
@@ -240,15 +235,24 @@ void Application::render(double alpha)
 	earth->render(camera->getView(), camera->getProjection(), shaderProgram);
 
 	// Вычисление размера спутников в зависимости от отдаления камеры (используем линейную интерполяцию)
-	float satelliteSize = 5.0f + (camera->getRadius() - 3.0f) * (0.5f - 5.0f) / (20.0f - 3.0f);
+	float satelliteSize = 4.0f;
+	float cameraRadius = camera->getRadius();
+	if (cameraRadius > 4.0f) {
+		float maxR = 20.0f, minR = 3.0f;
+		float maxSize = 3.0f, minSize = 1.0f;
+		satelliteSize = maxSize + (cameraRadius - minR) * (minSize - maxSize) / (maxR - minR);
+	}
+	//float satelliteSize = 5.0f + (camera->getRadius() - 3.0f) * (0.5f - 5.0f) / (20.0f - 3.0f);
 	//float satelliteSize = 2.0f;
-	satelliteRenderer.setSatelliteSize(satelliteSize);
+	satelliteRenderer->setSatelliteSize(satelliteSize);
 
 	{
 		std::lock_guard<std::mutex> lock(dataMutex);
-		satelliteRenderer.renderSatellites(camera->getView(), camera->getProjection(), cachedSatelliteStates, true);
-		satelliteRenderer.renderOrbits(camera->getView(), camera->getProjection(), cachedSatelliteStates, 
-			orbitCache, true);
+		if (renderOptions.areSatellitesVisible)
+			satelliteRenderer->renderSatellites(camera->getView(), camera->getProjection(), cachedSatelliteStates, true);
+		if (renderOptions.areOrbitsVisible)
+			satelliteRenderer->renderOrbits(camera->getView(), camera->getProjection(), cachedSatelliteStates,
+				orbitCache, true);
 	}
 
 	ui->drawMenu(timeManager->getStringCurrentTime());
@@ -296,6 +300,12 @@ bool Application::initializeManagers()
 	satelliteManager = std::make_shared<SatelliteManager>(dataManager);
 	if (!satelliteManager->initialize()) {
 		std::cerr << "Failed to initialize SatelliteManager" << std::endl;
+		return false;
+	}
+
+	satelliteRenderer = std::make_unique<SatelliteRenderer>(renderOptions);
+	if (!satelliteRenderer->initialize()) {
+		std::cerr << "Failed to init SatelliteRenderer!" << std::endl;
 		return false;
 	}
 
