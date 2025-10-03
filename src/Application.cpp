@@ -64,10 +64,6 @@ void Application::start()
 	sun->setLightning(shaderProgram);
 	sunDir = sun->getDirection();
 
-	//auto previousTime = std::chrono::steady_clock::now();
-	//double lag = 0.0;
-	//constexpr double fixed_dt = 1.0 / 60.0; // Фиксированный шаг для обновления физики
-
 	// Инициализация таймеров
 	auto previousTime = std::chrono::steady_clock::now();
 	auto currentTime = previousTime;
@@ -85,21 +81,6 @@ void Application::start()
 	dataLoadingThread.join();*/
 
 	while (isRunning) {
-		//auto currentTime = std::chrono::steady_clock::now();
-		//auto elapsedTime = currentTime - previousTime;
-		//previousTime = currentTime;
-		//lag += std::chrono::duration<double>(elapsedTime).count();
-
-		//processInput();
-
-		//// Фиксированное обновление физики (максимум 5 раз за кадр)
-		//int updateCount = 0;
-		//while (lag >= fixed_dt && updateCount < 5) {
-		//	update(fixed_dt);
-		//	lag -= fixed_dt;
-		//	updateCount++;
-		//}
-
 		currentTime = std::chrono::steady_clock::now();
 		double elapsedTime = std::chrono::duration<double>(currentTime - previousTime).count();
 		previousTime = currentTime;
@@ -233,7 +214,7 @@ void Application::update(double dt)
 
 		updateFuture = std::async(std::launch::async, [this]() {
 			try {
-				satelliteManager->update(timeManager->getCurrentJulianDate(), 2.0, 100);//
+				satelliteManager->update(timeManager->getCurrentJulianDate());
 
 				std::lock_guard<std::mutex> lock(dataMutex);
 				cachedSatelliteStates = satelliteManager->getSatelliteStates();

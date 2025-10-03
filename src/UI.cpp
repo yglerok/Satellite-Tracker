@@ -37,7 +37,7 @@ void UI::drawMenu(const std::string& timeString)
 	ImGui_ImplSDL3_NewFrame();
 	ImGui::NewFrame();
 
-	ImGui::ShowDemoWindow();
+	//ImGui::ShowDemoWindow();
 	//ImGui::Begin("Lightning settings", 0, ImGuiWindowFlags_AlwaysAutoResize);
 
 	//ImGui::DragFloat("Ambient strength", &inputParams.ambientStrength, 0.001f, 0.0f, 0.3f);
