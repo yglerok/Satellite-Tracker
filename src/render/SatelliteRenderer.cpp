@@ -44,6 +44,8 @@ void SatelliteRenderer::renderSatellites(const glm::mat4& view, const glm::mat4&
 	}
 
 	glEnable(GL_PROGRAM_POINT_SIZE);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	glUseProgram(satelliteShader);
 
@@ -65,6 +67,7 @@ void SatelliteRenderer::renderSatellites(const glm::mat4& view, const glm::mat4&
 	}
 
 	glBindVertexArray(0);
+	glDisable(GL_BLEND);
 }
 
 void SatelliteRenderer::renderOrbits(const glm::mat4& view, const glm::mat4& projection, 

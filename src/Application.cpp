@@ -64,26 +64,69 @@ void Application::start()
 	sun->setLightning(shaderProgram);
 	sunDir = sun->getDirection();
 
+	//auto previousTime = std::chrono::steady_clock::now();
+	//double lag = 0.0;
+	//constexpr double fixed_dt = 1.0 / 60.0; // Фиксированный шаг для обновления физики
+
+	// Инициализация таймеров
 	auto previousTime = std::chrono::steady_clock::now();
+	auto currentTime = previousTime;
 	double lag = 0.0;
-	constexpr double fixed_dt = 1.0 / 60.0; // Фиксированный шаг для обновления физики
+	constexpr double fixed_dt = 1.0 / 60.0;
+	constexpr double max_lag = 0.1; // Максимальный лаг 100ms
 
 	SDL_GL_SetSwapInterval(1); // Включаем vsync
 
+	// Загрузка данных
+	/*std::thread dataLoadingThread(&Application::loadDataFromDatabase, this);
+	ui->drawLoadingWindow();
+	SDL_GL_SwapWindow(window);
+
+	dataLoadingThread.join();*/
+
 	while (isRunning) {
-		auto currentTime = std::chrono::steady_clock::now();
-		auto elapsedTime = currentTime - previousTime;
+		//auto currentTime = std::chrono::steady_clock::now();
+		//auto elapsedTime = currentTime - previousTime;
+		//previousTime = currentTime;
+		//lag += std::chrono::duration<double>(elapsedTime).count();
+
+		//processInput();
+
+		//// Фиксированное обновление физики (максимум 5 раз за кадр)
+		//int updateCount = 0;
+		//while (lag >= fixed_dt && updateCount < 5) {
+		//	update(fixed_dt);
+		//	lag -= fixed_dt;
+		//	updateCount++;
+		//}
+
+		currentTime = std::chrono::steady_clock::now();
+		double elapsedTime = std::chrono::duration<double>(currentTime - previousTime).count();
 		previousTime = currentTime;
-		lag += std::chrono::duration<double>(elapsedTime).count();
+
+		// Ограничение максимального лага для избежания спирали смерти
+		if (elapsedTime > max_lag) {
+			elapsedTime = max_lag;
+		}
+
+		lag += elapsedTime;
 
 		processInput();
 
-		// Фиксированное обновление физики (максимум 5 раз за кадр)
+		// Обновление физики с защитой от спирали смерти
 		int updateCount = 0;
-		while (lag >= fixed_dt && updateCount < 5) {
+		constexpr int max_updates_per_frame = 10;
+
+		while (lag >= fixed_dt && updateCount < max_updates_per_frame) {
 			update(fixed_dt);
 			lag -= fixed_dt;
 			updateCount++;
+		}
+
+		// Если мы всё ещё отстаём, сбрасываем лаг чтобы избежать спирали смерти
+		if (lag >= fixed_dt) {
+			lag = 0.0;
+			std::cout << "WARNING: Physics update lag detected, resetting lag" << std::endl;
 		}
 		
 		// Интерполяция для более плавного рендера
@@ -245,6 +288,10 @@ void Application::render(double alpha)
 	//float satelliteSize = 5.0f + (camera->getRadius() - 3.0f) * (0.5f - 5.0f) / (20.0f - 3.0f);
 	//float satelliteSize = 2.0f;
 	satelliteRenderer->setSatelliteSize(satelliteSize);
+	satelliteRenderer->setSatelliteColor(glm::vec4(renderOptions.satellitesColor[0], renderOptions.satellitesColor[1], 
+		renderOptions.satellitesColor[2], renderOptions.satellitesColor[3]));
+	satelliteRenderer->setOrbitColor(glm::vec4(renderOptions.orbitsColor[0], renderOptions.orbitsColor[1],
+		renderOptions.orbitsColor[2], renderOptions.orbitsColor[3]));
 
 	{
 		std::lock_guard<std::mutex> lock(dataMutex);
@@ -258,7 +305,7 @@ void Application::render(double alpha)
 	ui->drawMenu(timeManager->getStringCurrentTime());
 }
 
-void Application::loadDataFromDatabase(const std::string& backupPath)
+void Application::loadDataFromDatabase()
 {
 	auto updateResult = dataManager->updateTleData(backupPath);
 
@@ -288,9 +335,6 @@ bool Application::initializeManagers()
 	std::filesystem::create_directories("data");
 	std::filesystem::create_directories("data/backups");
 
-	const std::string dbPath = "data/satellites.db";
-	const std::string backupPath = "data/backups/celestrak_backup.tle";
-
 	dataManager = std::make_shared<DataManager>(dbPath);
 	if (!dataManager->initialize()) {
 		std::cerr << "Failed to initialize DataManager!" << std::endl;
@@ -313,7 +357,7 @@ bool Application::initializeManagers()
 	satelliteManager->setEventBus(eventBus.get());
 
 	// Загрузка и сортировка спутников
-	loadDataFromDatabase(backupPath);
+	loadDataFromDatabase();
 
 	{
 		std::lock_guard<std::mutex> lock(dataMutex);

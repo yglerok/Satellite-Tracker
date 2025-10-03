@@ -83,7 +83,9 @@ private:
 	std::map<int, std::vector<glm::vec3>> orbitCache;
 
 	std::shared_ptr<DataManager> dataManager;
-	void loadDataFromDatabase(const std::string& backupPath);
+	void loadDataFromDatabase();
+	const std::string dbPath = "data/satellites.db";
+	const std::string backupPath = "data/backups/celestrak_backup.tle";
 
 	std::shared_ptr<SatelliteManager> satelliteManager;
 	std::unique_ptr<SatelliteRenderer> satelliteRenderer;

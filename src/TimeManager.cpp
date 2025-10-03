@@ -81,10 +81,10 @@ double TimeManager::calcJulianDate(int year, int month, int day, int hour, int m
     // 30.6001 Ч средн€€ длина мес€ца
     // month + 1 Ч коррекци€ дл€ правильного учЄта мес€цев
     // 1524.5 Ч сдвиг дл€ согласовани€ с астрономической эпохой
-    //double jd = floor(365.25 * (year + 4716)) + floor(30.6001 * (month + 1)) + day + b - 1524.5;
-    //jd += (hour + minute / 60.0 + second / 3600.0) / 24.0;
     double jd = floor(365.25 * (year + 4716)) + floor(30.6001 * (month + 1)) + day + b - 1524.5;
-    jd += (hour - 12.0) / 24.0 + minute / 1440.0 + second / 86400.0;
+    jd += (hour + minute / 60.0 + second / 3600.0) / 24.0;
+    /*double jd = floor(365.25 * (year + 4716)) + floor(30.6001 * (month + 1)) + day + b - 1524.5;
+    jd += (hour - 12.0) / 24.0 + minute / 1440.0 + second / 86400.0;*/
 
     return jd;
 }

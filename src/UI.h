@@ -15,8 +15,8 @@
 struct RenderOptions {
 	bool areSatellitesVisible = true;
 	bool areOrbitsVisible = true;
-	float satellitesColor[4] = { 1.0f, 0.0f, 0.0f, 1.0f };
-	float orbitsColor[4] = { 1.0f, 1.0f, 1.0f, 0.5f };
+	float satellitesColor[4] = { 1.0f, 0.0f, 0.0f, 0.664f };
+	float orbitsColor[4] = { 1.0f, 1.0f, 1.0f, 0.2f };
 };
 
 class UI
@@ -31,10 +31,14 @@ public:
 
 	bool initialize(SDL_Window* window, SDL_GLContext* context);
 	void drawMenu(const std::string& timeString);
+	void drawLoadingWindow();
 
 private:
 	int windowWidth, windowHeight;
-	std::unordered_map<std::string, bool> filters;
+	std::unordered_map<std::string, bool> filtersByName;
+	std::unordered_map<std::string, bool> filtersByOrbitType;
+	std::vector<std::string> orbitTypes = { "Geostationary", "Low Earth Orbit",
+		"Medium Earth Orbit", "High Earth Orbit", "Other" };
 	std::shared_ptr<DataManager> dataManager;
 	std::shared_ptr<SatelliteManager> satelliteManager;
 

@@ -18,23 +18,26 @@ bool UI::initialize(SDL_Window* window, SDL_GLContext* context)
 
 	// Извлечение фильтров групп
 	for (const auto& groupName : dataManager->getAllGroupNames()) {
-		filters.emplace(groupName, true);
+		if (std::find(orbitTypes.begin(), orbitTypes.end(), groupName) != orbitTypes.end())
+			filtersByOrbitType.emplace(groupName, true);
+		else
+			filtersByName.emplace(groupName, true);
 	}
+
+	ImGuiIO& io = ImGui::GetIO();
+	io.DisplaySize.x = static_cast<float>(windowWidth);
+	io.DisplaySize.y = static_cast<float>(windowHeight);
 
 	return true;
 }
 
 void UI::drawMenu(const std::string& timeString)
 {
-	ImGuiIO& io = ImGui::GetIO();
-	io.DisplaySize.x = static_cast<float>(windowWidth);
-	io.DisplaySize.y = static_cast<float>(windowHeight);
-
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplSDL3_NewFrame();
 	ImGui::NewFrame();
 
-	//ImGui::ShowDemoWindow();
+	ImGui::ShowDemoWindow();
 	//ImGui::Begin("Lightning settings", 0, ImGuiWindowFlags_AlwaysAutoResize);
 
 	//ImGui::DragFloat("Ambient strength", &inputParams.ambientStrength, 0.001f, 0.0f, 0.3f);
@@ -60,7 +63,8 @@ void UI::drawMenu(const std::string& timeString)
 
 	if (ImGui::CollapsingHeader("Filters")) {
 		//ImGui::SeparatorText("Info");
-		ImGui::Text("Displaing groups:");
+		ImGui::Text("Here you can choose how to sort satellites\n(by name or by orbit type).");
+		/*ImGui::Text("Displaing groups:");
 		ImGui::SameLine();
 		if (ImGui::Button("Select all")) {
 			for (auto& [filter, state] : filters)
@@ -70,12 +74,22 @@ void UI::drawMenu(const std::string& timeString)
 		if (ImGui::Button("Unselect all")) {
 			for (auto& [filter, state] : filters)
 				state = false;
+		}*/
+		static int filterType = 0; // 0 - by name, 1 - by orbit type
+		ImGui::RadioButton("By name", &filterType, 0);
+		ImGui::RadioButton("By orbit type", &filterType, 1);
+
+		std::unordered_map<std::string, bool>* filters = &filtersByName; // sorting by name by default
+		
+		if (filterType == 1) {
+			filters = &filtersByOrbitType;
 		}
-		for (auto& [filter, state] : filters) {
+
+		for (auto& [filter, state] : *filters) {
 			ImGui::Checkbox(filter.c_str(), &state);
 		}
 
-		satelliteManager->setGroupFilters(filters);
+		satelliteManager->setGroupFilters(*filters);
 	}
 
 	if (ImGui::CollapsingHeader("Color options")) {
@@ -85,6 +99,22 @@ void UI::drawMenu(const std::string& timeString)
 		ImGui::ColorEdit4("Satellites color", renderOptions.satellitesColor, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_AlphaBar);
 		ImGui::ColorEdit4("Orbits color", renderOptions.orbitsColor, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_AlphaBar);
 	}
+
+	ImGui::End();
+
+	ImGui::Render();
+	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}
+
+void UI::drawLoadingWindow()
+{
+	ImGui_ImplOpenGL3_NewFrame();
+	ImGui_ImplSDL3_NewFrame();
+	ImGui::NewFrame();
+
+	ImGui::Begin("Info");
+	
+	ImGui::Text("Loading...");
 
 	ImGui::End();
 
