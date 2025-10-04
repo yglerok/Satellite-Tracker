@@ -39,7 +39,7 @@ bool Application::init()
 		return false;
 	}
 
-	ui = std::make_unique<UI>(width, height, dataManager, satelliteManager, renderOptions);
+	ui = std::make_unique<UI>(width, height, dataManager, satelliteManager, renderOptions, mouseState);
 	ui->initialize(window, &context);
 
 	return true;
@@ -73,12 +73,33 @@ void Application::start()
 
 	SDL_GL_SetSwapInterval(1); // Включаем vsync
 
+	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	//ui->drawLoadingWindow();
+	//SDL_GL_SwapWindow(window);
+	//SDL_Delay(50);
+	//
+	//// обрабатываем события SDL чтобы окно обновилось
+	//SDL_PumpEvents();
+	
 	// Загрузка данных
-	/*std::thread dataLoadingThread(&Application::loadDataFromDatabase, this);
-	ui->drawLoadingWindow();
-	SDL_GL_SwapWindow(window);
+	std::atomic<bool> isDataLoaded = false;
+	std::thread dataLoadingThread([this, &isDataLoaded]() {
+		loadDataFromDatabase();
+		isDataLoaded = true;
+	});
+	
+	while (!isDataLoaded.load()) {
+		processInput();
 
-	dataLoadingThread.join();*/
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		ui->drawLoadingWindow();
+		SDL_GL_SwapWindow(window);
+
+		std::this_thread::sleep_for(std::chrono::milliseconds(16));
+	}
+	
+
+	dataLoadingThread.join();
 
 	while (isRunning) {
 		currentTime = std::chrono::steady_clock::now();
@@ -149,6 +170,9 @@ void Application::processInput()
 			isRunning = false;
 			break;
 		case SDL_EVENT_MOUSE_WHEEL:
+			if (mouseState.isOnMenuScrollArea)
+				break;
+
 			camera->increaseRadius(event.wheel.y);
 			break;
 		case SDL_EVENT_MOUSE_BUTTON_DOWN:
@@ -190,7 +214,7 @@ void Application::processInput()
 
 void Application::update(double dt)
 {
-	static double lastSatelliteCalculation = 0;
+	static double lastSatelliteCalculation = satelliteUpdateInterval;
 
 	timeManager->update(dt);
 	camera->update(dt);	
@@ -338,7 +362,6 @@ bool Application::initializeManagers()
 	satelliteManager->setEventBus(eventBus.get());
 
 	// Загрузка и сортировка спутников
-	loadDataFromDatabase();
 
 	{
 		std::lock_guard<std::mutex> lock(dataMutex);

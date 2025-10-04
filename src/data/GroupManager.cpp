@@ -21,9 +21,13 @@ bool GroupManager::initialize()
         "Space Stations",
         "Scientific",
         "Geostationary",
+        "Geosynchronous Orbit",
         "Low Earth Orbit",
         "Medium Earth Orbit",
         "High Earth Orbit",
+        "Highly Elliptical Orbit",
+        "Polar Orbit",
+        "Very Low Earth Orbit",
         "Other"
     };
 
@@ -139,7 +143,7 @@ bool GroupManager::sortSatellitesIntoGroups()
             categorized = true;
         }
 
-        //categorizeByOrbit(satellite);
+        categorizeByOrbit(satellite);
 
         if (categorized) 
             categorizedCount++;    
@@ -234,22 +238,57 @@ void GroupManager::categorizeByOrbit(const SatelliteTle& satellite)
         double inclination = std::stod(satellite.tleLine2.substr(8, 8));
         double eccentricity = std::stod(satellite.tleLine2.substr(26, 7)) / 10000000.0;
         double meanMotion = std::stod(satellite.tleLine2.substr(52, 11));
-
-        if (std::abs(inclination - 0.0) < 1.0 && eccentricity < 0.01) {
-            addSatelliteToGroup(satellite.noradId, "Geostationary");
+    
+        // Вычисляем период обращения в минутах
+        double periodMinutes = 1440.0 / meanMotion;
+    
+        // Вычисляем высоту орбиты (приблизительно для круговых орбит)
+        const double earthRadius = 6371.0; 
+        const double mu = 398600.4418;
+        double periodSeconds = periodMinutes * 60.0;
+        double semiMajorAxis = pow((mu * periodSeconds * periodSeconds) / (4 * M_PI * M_PI), 1.0 / 3.0);
+        double altitude = semiMajorAxis - earthRadius;
+    
+        // Классификация орбит
+        if (eccentricity > 0.1) {
+            addSatelliteToGroup(satellite.noradId, "Highly Elliptical Orbit");
         }
-        else if (meanMotion > 11.25 && inclination < 55.0) {
-            addSatelliteToGroup(satellite.noradId, "Low Earth Orbit");
+        // Геостационарные орбиты (GEO)
+        else if (std::abs(periodMinutes - 1436.0) < 10.0) { // Период ~1 звездные сутки
+            if (inclination < 1.0 && eccentricity < 0.001) {
+                // Идеальная геостационарная орбита
+                addSatelliteToGroup(satellite.noradId, "Geostationary");
+            }
+            else {
+                // Геосинхронная но не геостационарная
+                addSatelliteToGroup(satellite.noradId, "Geosynchronous Orbit");
+            }
         }
-        else if (meanMotion > 2.0 && meanMotion <= 11.25) {
+        // Средние орбиты (MEO)
+        else if (altitude > 2000 && altitude <= 35786) {
             addSatelliteToGroup(satellite.noradId, "Medium Earth Orbit");
         }
+        // Низкие орбиты (LEO)
+        else if (altitude <= 2000) {
+            if (inclination > 80.0 && inclination < 100.0) {
+                addSatelliteToGroup(satellite.noradId, "Polar Orbit");
+            }
+            else if (altitude < 600) {
+                addSatelliteToGroup(satellite.noradId, "Very Low Earth Orbit");
+            }
+            else {
+                addSatelliteToGroup(satellite.noradId, "Low Earth Orbit");
+            }
+        }
+        // Высокие орбиты (HEO) - выше геостационарной
         else {
             addSatelliteToGroup(satellite.noradId, "High Earth Orbit");
         }
     }
-    catch (...) {
-        // В случае ошибки парсинга добавляем в Other
+    catch (const std::exception& e) {
+        std::cerr << "Error categorizing orbit for satellite " << satellite.noradId
+            << ": " << e.what() << std::endl;
         addSatelliteToGroup(satellite.noradId, "Other");
     }
+
 }

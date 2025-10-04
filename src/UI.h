@@ -19,14 +19,26 @@ struct RenderOptions {
 	float orbitsColor[4] = { 1.0f, 1.0f, 1.0f, 0.2f };
 };
 
+struct MouseState {
+	bool isPressed = false;
+	float prevX = 0.0f, prevY = 0.0f;
+	bool isOnMenuScrollArea = false;
+};
+
+struct FilterGroup {
+	std::string name;
+	bool isEnabled;
+	std::unordered_map<std::string, bool> subgroups;
+};
+
 class UI
 {
 public:
 	UI() = delete;
 	UI(const int& width, const int& height, std::shared_ptr<DataManager> dataMngr, 
-		std::shared_ptr<SatelliteManager> satelliteMngr, RenderOptions& options) :
+		std::shared_ptr<SatelliteManager> satelliteMngr, RenderOptions& options, MouseState& state) :
 		windowWidth(width), windowHeight(height), dataManager(dataMngr), 
-		satelliteManager(satelliteMngr), renderOptions(options) { };
+		satelliteManager(satelliteMngr), renderOptions(options), mouseState(state) { };
 	~UI() = default;
 
 	bool initialize(SDL_Window* window, SDL_GLContext* context);
@@ -35,14 +47,19 @@ public:
 
 private:
 	int windowWidth, windowHeight;
-	std::unordered_map<std::string, bool> filtersByName;
-	std::unordered_map<std::string, bool> filtersByOrbitType;
+	std::unordered_map<std::string, FilterGroup> filtersByName;
+	std::unordered_map<std::string, FilterGroup> filtersByOrbitType;
 	std::vector<std::string> orbitTypes = { "Geostationary", "Low Earth Orbit",
-		"Medium Earth Orbit", "High Earth Orbit", "Other" };
+		"Medium Earth Orbit", "High Earth Orbit", "Polar Orbit",
+		"Very Low Earth Orbit", "Highly Elliptical Orbit", "Geosynchronous Orbit",
+		"Other" };
 	std::shared_ptr<DataManager> dataManager;
 	std::shared_ptr<SatelliteManager> satelliteManager;
 
 	RenderOptions& renderOptions;
+	MouseState& mouseState;
+
+	void initializeFilterGroups();
 
 	void drawTimeBlock();
 	void drawForcedUpdateBlock();

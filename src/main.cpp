@@ -3,7 +3,7 @@
 
 #include "Application.h"
 
-const int WINDOW_WIDTH = 1024, WINDOW_HEIGHT = 780;
+const int WINDOW_WIDTH = 1280, WINDOW_HEIGHT = 720;
 std::string WINDOW_TITLE = "Satellite Tracker";
 
 int main()

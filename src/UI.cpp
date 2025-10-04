@@ -16,13 +16,8 @@ bool UI::initialize(SDL_Window* window, SDL_GLContext* context)
 		return false;
 	}
 
-	// Извлечение фильтров групп
-	for (const auto& groupName : dataManager->getAllGroupNames()) {
-		if (std::find(orbitTypes.begin(), orbitTypes.end(), groupName) != orbitTypes.end())
-			filtersByOrbitType.emplace(groupName, true);
-		else
-			filtersByName.emplace(groupName, true);
-	}
+	// Инициализируем иерархические фильтры
+	initializeFilterGroups();
 
 	ImGuiIO& io = ImGui::GetIO();
 	io.DisplaySize.x = static_cast<float>(windowWidth);
@@ -38,14 +33,6 @@ void UI::drawMenu(const std::string& timeString)
 	ImGui::NewFrame();
 
 	//ImGui::ShowDemoWindow();
-	//ImGui::Begin("Lightning settings", 0, ImGuiWindowFlags_AlwaysAutoResize);
-
-	//ImGui::DragFloat("Ambient strength", &inputParams.ambientStrength, 0.001f, 0.0f, 0.3f);
-	//ImGui::DragFloat("Specular strength", &inputParams.specularStrength, 0.01f, 0.0f, 1.0f);
-	////ImGui::DragFloat3("Light position (x, y, z)", inputParams.lightPos, 0.1f, -15.0f, 15.0f);
-	//ImGui::ColorEdit3("Light color", inputParams.lightColor);
-
-	//ImGui::End();
 
 	ImGui::Begin("Menu", 0, ImGuiWindowFlags_AlwaysAutoResize);
 	ImGui::SeparatorText("Time");
@@ -56,46 +43,83 @@ void UI::drawMenu(const std::string& timeString)
 	ImGui::Checkbox("Show orbits", &renderOptions.areOrbitsVisible);
 	/*if (ImGui::Button("Forced update from network")) {
 		dataManager->forceUpdateTleFromNetwork();
-	}
+	}*/
 	if (ImGui::Button("Sort satellites")) {
 		dataManager->sortSatellitesIntoGroups();
-	}*/
+	}
 
 	if (ImGui::CollapsingHeader("Filters")) {
 		//ImGui::SeparatorText("Info");
 		ImGui::Text("Here you can choose how to sort satellites\n(by name or by orbit type).");
-		/*ImGui::Text("Displaing groups:");
-		ImGui::SameLine();
-		if (ImGui::Button("Select all")) {
-			for (auto& [filter, state] : filters)
-				state = true;
-		}
-		ImGui::SameLine();
-		if (ImGui::Button("Unselect all")) {
-			for (auto& [filter, state] : filters)
-				state = false;
-		}*/
+
 		static int filterType = 0; // 0 - by name, 1 - by orbit type
 		ImGui::RadioButton("By name", &filterType, 0);
 		ImGui::RadioButton("By orbit type", &filterType, 1);
 
-		std::unordered_map<std::string, bool>* filters = &filtersByName; // sorting by name by default
-		
-		if (filterType == 1) {
-			filters = &filtersByOrbitType;
+		auto& currentFilters = (filterType == 1) ? filtersByOrbitType : filtersByName;
+
+		if (ImGui::Button("Select all")) {
+			for (auto& [groupName, group] : currentFilters) {
+				group.isEnabled = true;
+				for (auto& [subgroup, state] : group.subgroups)
+					state = true;
+			}
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Unselect all")) {
+			for (auto& [groupName, group] : currentFilters) {
+				group.isEnabled = false;
+				for (auto& [subgroup, state] : group.subgroups)
+					state = false;
+			}
 		}
 
-		for (auto& [filter, state] : *filters) {
-			ImGui::Checkbox(filter.c_str(), &state);
+		ImGui::BeginChild("Filters", ImVec2(ImGui::GetContentRegionAvail().x, 300),
+			ImGuiChildFlags_None, ImGuiWindowFlags_None);
+
+		for (auto& [groupName, group] : currentFilters) {
+			if (ImGui::Checkbox(groupName.c_str(), &group.isEnabled)) {
+				for (auto& [subgroup, state] : group.subgroups)
+					state = group.isEnabled;
+			}
+
+			// Отступ
+			ImGui::Indent(20.0f);
+
+			if (group.isEnabled) {
+				for (auto& [subgroup, state] : group.subgroups)
+					ImGui::Checkbox(subgroup.c_str(), &state);
+			}
+			else {
+				ImGui::TextDisabled("(%d subgroups)", group.subgroups.size());
+			}
+
+			ImGui::Unindent(20.0f);
+			ImGui::Spacing();
 		}
 
-		satelliteManager->setGroupFilters(*filters);
+		ImGui::EndChild();
+
+		mouseState.isOnMenuScrollArea = (ImGui::IsItemHovered()) ? true : false;
+
+		std::unordered_map<std::string, bool> flatFilters;
+
+		for (const auto& [groupName, group] : currentFilters) {
+			if (group.subgroups.empty()) {
+				flatFilters[groupName] = group.isEnabled ? true : false;
+				continue;
+			}
+
+			for (const auto& [subgroup, state] : group.subgroups) {
+				flatFilters[subgroup] = state ? true : false;
+			}
+		}
+
+		satelliteManager->setGroupFilters(flatFilters);
 	}
 
 	if (ImGui::CollapsingHeader("Color options")) {
-		ImGui::Text("Here you can choose colors for satellites and orbits.");
-		/*ImGui::Text("Satellites color:");
-		ImGui::SameLine();*/
+		ImGui::Text("Here you can choose colors for satellites\nand orbits.");
 		ImGui::ColorEdit4("Satellites color", renderOptions.satellitesColor, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_AlphaBar);
 		ImGui::ColorEdit4("Orbits color", renderOptions.orbitsColor, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_AlphaBar);
 	}
@@ -112,12 +136,105 @@ void UI::drawLoadingWindow()
 	ImGui_ImplSDL3_NewFrame();
 	ImGui::NewFrame();
 
-	ImGui::Begin("Info");
-	
-	ImGui::Text("Loading...");
+	// Делаем окно более заметным
+	ImGui::SetNextWindowPos(ImVec2(0, 0));
+	ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
+	ImGui::Begin("Loading", nullptr,
+		ImGuiWindowFlags_NoTitleBar |
+		ImGuiWindowFlags_NoResize |
+		ImGuiWindowFlags_NoMove |
+		ImGuiWindowFlags_NoBackground);
+
+	// Центрируем текст с большим шрифтом
+	ImGui::SetCursorPos(ImVec2(
+		(ImGui::GetIO().DisplaySize.x - 200) * 0.5f,
+		(ImGui::GetIO().DisplaySize.y - 50) * 0.5f
+	));
+
+	ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "LOADING SATELLITES DATA...");
 
 	ImGui::End();
 
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}
+
+void UI::initializeFilterGroups()
+{
+	// Крупные созвездия
+	filtersByName["Constellations"] = { "Constellations", true, {
+		{"Starlink", true}, {"OneWeb", true}, {"Iridium", true},
+		{"Globalstar", true}, {"ORBCOMM", true}, {"Planet Labs", true}, {"Spire", true}
+	} };
+
+	// Навигационные системы
+	filtersByName["Navigation"] = { "Navigation", true, {
+		{"GPS", true}, {"GLONASS", true}, {"Galileo", true},
+		{"BeiDou", true}, {"IRNSS", true}, {"QZSS", true}
+	} };
+
+	// Коммуникационные операторы
+	filtersByName["Communication"] = { "Communication", true, {
+		{"Intelsat", true}, {"SES", true}, {"Eutelsat", true},
+		{"Telesat", true}, {"Inmarsat", true}, {"Thuraya", true}
+	} };
+
+	// Научные и исследовательские
+	filtersByName["Scientific"] = { "Scientific", true, {
+		{"NASA", true}, {"ESA", true}, {"Hubble Space Telescope", true},
+		{"James Webb Telescope", true}, {"Planetary Science", true}, {"Astronomy", true}
+	} };
+
+	// Метеорологические
+	filtersByName["Weather"] = { "Weather", true, {
+		{"NOAA", true}, {"GOES", true}, {"Meteosat", true},
+		{"Fengyun", true}, {"Electro-L", true}
+	} };
+
+	// Военные
+	filtersByName["Military"] = { "Military", true, {
+		{"US Military", true}, {"Russian Military", true},
+		{"Reconnaissance", true}, {"Early Warning", true}
+	} };
+
+	// Мониторинг Земли
+	filtersByName["Earth Observation"] = { "Earth Observation", true, {
+		{"Landsat", true}, {"Sentinel", true}, {"SPOT", true},
+		{"High Resolution Imaging", true}
+	} };
+
+	// По странам
+	/*filtersByName["Countries"] = { "Countries", true, {
+		{"Russian", true}, {"Chinese", true}, {"Indian", true},
+		{"Japanese", true}, {"European", true}
+	} };*/
+
+	// Специализированные
+	filtersByName["Specialized"] = { "Specialized", true, {
+		{"Amateur Radio", true}, {"CubeSat", true}, {"Technology Demo", true},
+		{"Space Station Related", true}, {"Debris/Rocket Body", true}
+	} };
+
+	// === ОРБИТАЛЬНЫЕ ГРУППЫ ===
+	/*filtersByOrbitType["Orbits"] = { "Orbits", true, {
+		{"Geostationary", true}, {"Geosynchronous Orbit", true},
+		{"Low Earth Orbit", true}, {"Very Low Earth Orbit", true},
+		{"Polar Orbit", true}, {"Medium Earth Orbit", true},
+		{"Highly Elliptical Orbit", true}, {"High Earth Orbit", true},
+		{"Other", true}
+	} };*/
+
+	filtersByOrbitType["Low"] = { "Low", true, {
+		{"Very Low Earth Orbit", true}, {"Low Earth Orbit", true}, 
+		{"Polar Orbit", true}
+	} };
+
+	filtersByOrbitType["Medium Earth Orbit"] = { "Medium Earth Orbit", true };
+
+	filtersByOrbitType["High"] = { "High", true, {
+		{"Geostationary", true}, {"Geosynchronous Orbit", true},
+		{"Highly Elliptical Orbit", true}, {"High Earth Orbit", true}
+	} };
+
+	filtersByOrbitType["Other"] = { "Other", true };
 }

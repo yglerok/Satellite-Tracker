@@ -23,21 +23,12 @@
 #include "Camera.h"
 #include "TimeManager.h"
 
-
-
-static struct MouseState {
-	bool isPressed = false;
-	float prevX = 0.0f, prevY = 0.0f;
-};
-
 struct InputParameters {
 	float ambientStrength = 0.05f, specularStrength = 0.1f;
 	float //lightPos[3] = { 2.0f, 3.0f, 3.0f },
 		lightColor[3] = { 1.0f, 1.0f, 1.0f };
 	float nightTextureIntensity = 0.4f;
 };
-
-
 
 class Application
 {
@@ -55,7 +46,7 @@ private:
 	int width, height;
 	bool isRunning = true;
 	const int FPS = 60;
-	const double satelliteUpdateInterval = 1.0;
+	const double satelliteUpdateInterval = 0.5;
 	
 	void processInput();
 	void update(double dt);
