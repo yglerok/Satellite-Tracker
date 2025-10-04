@@ -105,44 +105,195 @@ bool GroupManager::sortSatellitesIntoGroups()
     for (const auto& satellite : allSatellites) {
         bool categorized = false;
 
-        // Îïğåäåëÿåì ãğóïïó íà îñíîâå õàğàêòåğèñòèê ñïóòíèêà
+        // === 1. ÊĞÓÏÍÛÅ ÑÏÓÒÍÈÊÎÂÛÅ ÑÎÇÂÅÇÄÈß ===
         if (isStarlinkSatellite(satellite)) {
             addSatelliteToGroup(satellite.noradId, "Starlink");
             categorized = true;
         }
-        else if (isGNSSSatellite(satellite)) {
-            if (satellite.name.find("GPS") != std::string::npos) {
-                addSatelliteToGroup(satellite.noradId, "GPS");
-            }
-            else if (satellite.name.find("GLONASS") != std::string::npos) {
-                addSatelliteToGroup(satellite.noradId, "GLONASS");
-            }
-            else if (satellite.name.find("NAVSTAR") != std::string::npos) {
-                addSatelliteToGroup(satellite.noradId, "NAVSTAR");
-            }
-            else if (satellite.name.find("GALILEO") != std::string::npos ||
-                satellite.name.find("Galileo") != std::string::npos) {
-                addSatelliteToGroup(satellite.noradId, "Galileo");
-            }
-            else if (satellite.name.find("BEIDOU") != std::string::npos ||
-                satellite.name.find("BeiDou") != std::string::npos) {
-                addSatelliteToGroup(satellite.noradId, "BeiDou");
-            }
+        else if (isOneWebSatellite(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "OneWeb");
             categorized = true;
         }
-        else if (isWeatherSatellite(satellite)) {
-            addSatelliteToGroup(satellite.noradId, "Weather");
+        else if (isIridiumSatellite(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "Iridium");
             categorized = true;
         }
-        else if (isSpaceStation(satellite)) {
-            addSatelliteToGroup(satellite.noradId, "Space Stations");
+        else if (isGlobalstarSatellite(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "Globalstar");
             categorized = true;
         }
-        else if (isScientificSatellite(satellite)) {
-            addSatelliteToGroup(satellite.noradId, "Scientific");
+        else if (isOrbcommSatellite(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "ORBCOMM");
+            categorized = true;
+        }
+        else if (isPlanetLabsSatellite(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "Planet Labs");
+            categorized = true;
+        }
+        else if (isSpireSatellite(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "Spire");
             categorized = true;
         }
 
+        // === 2. ÍÀÂÈÃÀÖÈÎÍÍÛÅ ÑÈÑÒÅÌÛ ===
+        else if (isGPSSatellite(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "GPS");
+            categorized = true;
+        }
+        else if (isGLONASSSatellite(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "GLONASS");
+            categorized = true;
+        }
+        else if (isGalileoSatellite(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "Galileo");
+            categorized = true;
+        }
+        else if (isBeiDouSatellite(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "BeiDou");
+            categorized = true;
+        }
+        else if (isIRNSSSatellite(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "IRNSS");
+            categorized = true;
+        }
+        else if (isQZSSSatellite(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "QZSS");
+            categorized = true;
+        }
+
+        // === 3. ÊÎÌÌÓÍÈÊÀÖÈÎÍÍÛÅ ÎÏÅĞÀÒÎĞÛ ===
+        else if (isIntelsatSatellite(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "Intelsat");
+            categorized = true;
+        }
+        else if (isSESsatellite(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "SES");
+            categorized = true;
+        }
+        else if (isEutelsatSatellite(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "Eutelsat");
+            categorized = true;
+        }
+        else if (isTelesatSatellite(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "Telesat");
+            categorized = true;
+        }
+        else if (isInmarsatSatellite(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "Inmarsat");
+            categorized = true;
+        }
+        else if (isThurayaSatellite(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "Thuraya");
+            categorized = true;
+        }
+
+        // === 4. ÍÀÓ×ÍÛÅ È ÈÑÑËÅÄÎÂÀÒÅËÜÑÊÈÅ ===
+        else if (isNASASatellite(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "NASA");
+            categorized = true;
+        }
+        else if (isESASatellite(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "ESA");
+            categorized = true;
+        }
+        else if (isHubbleTelescope(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "Hubble Space Telescope");
+            categorized = true;
+        }
+        else if (isJamesWebbTelescope(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "James Webb Telescope");
+            categorized = true;
+        }
+        else if (isPlanetaryScienceSatellite(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "Planetary Science");
+            categorized = true;
+        }
+        else if (isAstronomySatellite(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "Astronomy");
+            categorized = true;
+        }
+
+        // === 5. ÌÅÒÅÎĞÎËÎÃÈ×ÅÑÊÈÅ ===
+        else if (isNOAASatellite(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "NOAA");
+            categorized = true;
+        }
+        else if (isGOESSatellite(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "GOES");
+            categorized = true;
+        }
+        else if (isMeteosatSatellite(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "Meteosat");
+            categorized = true;
+        }
+        else if (isFengyunSatellite(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "Fengyun");
+            categorized = true;
+        }
+        else if (isElectroLSatellite(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "Electro-L");
+            categorized = true;
+        }
+
+        // === 6. ÂÎÅÍÍÛÅ È ĞÀÇÂÅÄÛÂÀÒÅËÜÍÛÅ ===
+        else if (isUSMilitarySatellite(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "US Military");
+            categorized = true;
+        }
+        else if (isRussianMilitarySatellite(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "Russian Military");
+            categorized = true;
+        }
+        else if (isReconnaissanceSatellite(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "Reconnaissance");
+            categorized = true;
+        }
+        else if (isEarlyWarningSatellite(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "Early Warning");
+            categorized = true;
+        }
+
+        // === 7. ÇÅÌËÅÍÀÁËŞÄÅÍÈÅ ===
+        else if (isLandsatSatellite(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "Landsat");
+            categorized = true;
+        }
+        else if (isSentinelSatellite(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "Sentinel");
+            categorized = true;
+        }
+        else if (isSpotSatellite(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "SPOT");
+            categorized = true;
+        }
+        else if (isHighResolutionImagingSatellite(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "High Resolution Imaging");
+            categorized = true;
+        }
+
+        // === 8. ÑÏÅÖÈÀËÈÇÈĞÎÂÀÍÍÛÅ ÃĞÓÏÏÛ ===
+        else if (isAmateurRadioSatellite(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "Amateur Radio");
+            categorized = true;
+        }
+        else if (isCubeSat(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "CubeSat");
+            categorized = true;
+        }
+        else if (isTechnologyDemoSatellite(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "Technology Demo");
+            categorized = true;
+        }
+        else if (isSpaceStationRelated(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "Space Station Related");
+            categorized = true;
+        }
+        else if (isDebrisOrRocketBody(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "Debris/Rocket Body");
+            categorized = true;
+        }
+
+        // === 9. ÎĞÁÈÒÀËÜÍÀß ÊËÀÑÑÈÔÈÊÀÖÈß ===
         categorizeByOrbit(satellite);
 
         if (categorized) 
@@ -189,44 +340,274 @@ bool GroupManager::isStarlinkSatellite(const SatelliteTle& satellite) const
         satellite.tleLine2.substr(0, 5) == "STARL";
 }
 
-bool GroupManager::isWeatherSatellite(const SatelliteTle& satellite) const
-{
-    return satellite.name.find("NOAA") != std::string::npos ||
-        satellite.name.find("METEOR") != std::string::npos ||
-        satellite.name.find("GOES") != std::string::npos ||
-        satellite.name.find("METOP") != std::string::npos ||
-        satellite.name.find("FY") != std::string::npos;
+bool GroupManager::isGlobalstarSatellite(const SatelliteTle& satellite) const {
+    return satellite.name.find("GLOBALSTAR") != std::string::npos;
 }
 
-bool GroupManager::isGNSSSatellite(const SatelliteTle& satellite) const
-{
+bool GroupManager::isOrbcommSatellite(const SatelliteTle& satellite) const {
+    return satellite.name.find("ORBCOMM") != std::string::npos;
+}
+
+bool GroupManager::isPlanetLabsSatellite(const SatelliteTle& satellite) const {
+    return satellite.name.find("FLOCK") != std::string::npos ||
+        satellite.name.find("DOVE") != std::string::npos ||
+        satellite.name.find("SKYSAT") != std::string::npos;
+}
+
+bool GroupManager::isSpireSatellite(const SatelliteTle& satellite) const {
+    return satellite.name.find("LEMUR") != std::string::npos ||
+        satellite.name.find("SPIRE") != std::string::npos;
+}
+
+// 2. Íàâèãàöèîííûå ñèñòåìû (äåòàëèçàöèÿ)
+bool GroupManager::isGPSSatellite(const SatelliteTle& satellite) const {
     return satellite.name.find("GPS") != std::string::npos ||
-        satellite.name.find("GLONASS") != std::string::npos ||
-        satellite.name.find("GALILEO") != std::string::npos ||
-        satellite.name.find("BEIDOU") != std::string::npos ||
         satellite.name.find("NAVSTAR") != std::string::npos;
 }
 
-bool GroupManager::isSpaceStation(const SatelliteTle& satellite) const
-{
-    return satellite.name.find("ISS") != std::string::npos ||
-        satellite.name.find("TIANGONG") != std::string::npos ||
-        satellite.name.find("Tiangong") != std::string::npos;
+bool GroupManager::isGLONASSSatellite(const SatelliteTle& satellite) const {
+    return satellite.name.find("GLONASS") != std::string::npos;
 }
 
-bool GroupManager::isScientificSatellite(const SatelliteTle& satellite) const
-{
+bool GroupManager::isGalileoSatellite(const SatelliteTle& satellite) const {
+    return satellite.name.find("GALILEO") != std::string::npos;
+}
+
+bool GroupManager::isBeiDouSatellite(const SatelliteTle& satellite) const {
+    return satellite.name.find("BEIDOU") != std::string::npos;
+}
+
+bool GroupManager::isIRNSSSatellite(const SatelliteTle& satellite) const {
+    return satellite.name.find("IRNSS") != std::string::npos;
+}
+
+bool GroupManager::isQZSSSatellite(const SatelliteTle& satellite) const {
+    return satellite.name.find("QZSS") != std::string::npos;
+}
+
+// 3. Êîììóíèêàöèîííûå îïåğàòîğû
+bool GroupManager::isTelesatSatellite(const SatelliteTle& satellite) const {
+    return satellite.name.find("TELESAT") != std::string::npos;
+}
+
+bool GroupManager::isInmarsatSatellite(const SatelliteTle& satellite) const {
+    return satellite.name.find("INMARSAT") != std::string::npos;
+}
+
+bool GroupManager::isThurayaSatellite(const SatelliteTle& satellite) const {
+    return satellite.name.find("THURAYA") != std::string::npos;
+}
+
+// 4. Íàó÷íûå è èññëåäîâàòåëüñêèå
+bool GroupManager::isNASASatellite(const SatelliteTle& satellite) const {
+    return satellite.name.find("NASA") != std::string::npos ||
+        satellite.name.find("Explorer") != std::string::npos;
+}
+
+bool GroupManager::isESASatellite(const SatelliteTle& satellite) const {
+    return satellite.name.find("ESA") != std::string::npos;
+}
+
+bool GroupManager::isHubbleTelescope(const SatelliteTle& satellite) const {
     return satellite.name.find("HUBBLE") != std::string::npos ||
-        satellite.name.find("JAMES WEBB") != std::string::npos ||
-        satellite.name.find("TESS") != std::string::npos ||
-        satellite.name.find("KEPLER") != std::string::npos ||
         satellite.name.find("HST") != std::string::npos;
 }
 
-bool GroupManager::isISS(const SatelliteTle& satellite) const
-{
-    return satellite.name.find("ISS") != std::string::npos;
+bool GroupManager::isJamesWebbTelescope(const SatelliteTle& satellite) const {
+    return satellite.name.find("JAMES WEBB") != std::string::npos ||
+        satellite.name.find("JWST") != std::string::npos;
 }
+
+bool GroupManager::isPlanetaryScienceSatellite(const SatelliteTle& satellite) const {
+    return satellite.name.find("VOYAGER") != std::string::npos ||
+        satellite.name.find("CASSINI") != std::string::npos ||
+        satellite.name.find("MARS") != std::string::npos ||
+        satellite.name.find("LUNAR") != std::string::npos;
+}
+
+bool GroupManager::isAstronomySatellite(const SatelliteTle& satellite) const {
+    return satellite.name.find("TESS") != std::string::npos ||
+        satellite.name.find("KEPLER") != std::string::npos ||
+        satellite.name.find("CHANDRA") != std::string::npos ||
+        satellite.name.find("SWIFT") != std::string::npos;
+}
+
+// 5. Ìåòåîğîëîãè÷åñêèå
+bool GroupManager::isNOAASatellite(const SatelliteTle& satellite) const {
+    return satellite.name.find("NOAA") != std::string::npos;
+}
+
+bool GroupManager::isGOESSatellite(const SatelliteTle& satellite) const {
+    return satellite.name.find("GOES") != std::string::npos;
+}
+
+bool GroupManager::isMeteosatSatellite(const SatelliteTle& satellite) const {
+    return satellite.name.find("METEOSAT") != std::string::npos;
+}
+
+bool GroupManager::isFengyunSatellite(const SatelliteTle& satellite) const {
+    return satellite.name.find("FY-") != std::string::npos ||
+        satellite.name.find("FENGYUN") != std::string::npos;
+}
+
+bool GroupManager::isElectroLSatellite(const SatelliteTle& satellite) const {
+    return satellite.name.find("ELEKTRO") != std::string::npos;
+}
+
+// 6. Âîåííûå è ğàçâåäûâàòåëüíûå
+bool GroupManager::isUSMilitarySatellite(const SatelliteTle& satellite) const {
+    return satellite.name.find("USA") != std::string::npos ||
+        satellite.name.find("MILSTAR") != std::string::npos ||
+        satellite.name.find("DSP") != std::string::npos;
+}
+
+bool GroupManager::isRussianMilitarySatellite(const SatelliteTle& satellite) const {
+    return satellite.name.find("COSMOS") != std::string::npos;
+}
+
+bool GroupManager::isReconnaissanceSatellite(const SatelliteTle& satellite) const {
+    return satellite.name.find("KEYHOLE") != std::string::npos ||
+        satellite.name.find("LACROSSE") != std::string::npos;
+}
+
+bool GroupManager::isEarlyWarningSatellite(const SatelliteTle& satellite) const {
+    return satellite.name.find("SBIRS") != std::string::npos ||
+        satellite.name.find("DSP") != std::string::npos;
+}
+
+// 7. Ìîíèòîğèíã Çåìëè
+bool GroupManager::isLandsatSatellite(const SatelliteTle& satellite) const {
+    return satellite.name.find("LANDSAT") != std::string::npos;
+}
+
+bool GroupManager::isSentinelSatellite(const SatelliteTle& satellite) const {
+    return satellite.name.find("SENTINEL") != std::string::npos;
+}
+
+bool GroupManager::isSpotSatellite(const SatelliteTle& satellite) const {
+    return satellite.name.find("SPOT") != std::string::npos;
+}
+
+bool GroupManager::isHighResolutionImagingSatellite(const SatelliteTle& satellite) const {
+    return satellite.name.find("WORLDVIEW") != std::string::npos ||
+        satellite.name.find("GEOEYE") != std::string::npos ||
+        satellite.name.find("QUICKBIRD") != std::string::npos;
+}
+
+// 8. Ñïåöèàëèçèğîâàííûå ãğóïïû
+bool GroupManager::isSpaceStationRelated(const SatelliteTle& satellite) const {
+    return satellite.name.find("ISS") != std::string::npos ||
+        satellite.name.find("TIANGONG") != std::string::npos ||
+        satellite.name.find("PROGRESS") != std::string::npos ||
+        satellite.name.find("SOYUZ") != std::string::npos;
+}
+
+bool GroupManager::isDebrisOrRocketBody(const SatelliteTle& satellite) const {
+    return satellite.name.find("DEB") != std::string::npos ||
+        satellite.name.find("R/B") != std::string::npos ||
+        satellite.name.find("DEBRIS") != std::string::npos;
+}
+
+bool GroupManager::isOneWebSatellite(const SatelliteTle& satellite) const
+{
+    return satellite.name.find("ONEWEB") != std::string::npos ||
+        satellite.name.find("OneWeb") != std::string::npos;
+}
+
+bool GroupManager::isIridiumSatellite(const SatelliteTle& satellite) const
+{
+    return satellite.name.find("IRIDIUM") != std::string::npos ||
+        satellite.name.find("Iridium") != std::string::npos;
+}
+
+bool GroupManager::isIntelsatSatellite(const SatelliteTle& satellite) const
+{
+    return satellite.name.find("INTELSAT") != std::string::npos ||
+        satellite.name.find("Intelsat") != std::string::npos ||
+        satellite.name.find("IS-") != std::string::npos;
+}
+
+bool GroupManager::isSESsatellite(const SatelliteTle& satellite) const
+{
+    return satellite.name.find("SES") != std::string::npos ||
+        satellite.name.find("NSS-") != std::string::npos;
+}
+
+bool GroupManager::isEutelsatSatellite(const SatelliteTle& satellite) const
+{
+    return satellite.name.find("EUTELSAT") != std::string::npos ||
+        satellite.name.find("Eutelsat") != std::string::npos ||
+        satellite.name.find("EUTELSAT") != std::string::npos;
+}
+
+bool GroupManager::isAmateurRadioSatellite(const SatelliteTle& satellite) const
+{
+    return satellite.name.find("AMSAT") != std::string::npos ||
+        satellite.name.find("OSCAR") != std::string::npos ||
+        satellite.name.find("AO-") != std::string::npos ||
+        satellite.name.find("FO-") != std::string::npos ||
+        satellite.name.find("PO-") != std::string::npos ||
+        satellite.name.find("RS-") != std::string::npos ||
+        satellite.name.find("CAS-") != std::string::npos;
+}
+
+bool GroupManager::isCubeSat(const SatelliteTle& satellite) const
+{
+    return satellite.name.find("CUBESAT") != std::string::npos ||
+        satellite.name.find("CubeSat") != std::string::npos ||
+        satellite.name.find("QB50") != std::string::npos ||
+        satellite.name.find("1U") != std::string::npos ||
+        satellite.name.find("2U") != std::string::npos ||
+        satellite.name.find("3U") != std::string::npos;
+}
+
+bool GroupManager::isTechnologyDemoSatellite(const SatelliteTle& satellite) const
+{
+    return satellite.name.find("TECHNOLOGY") != std::string::npos ||
+        satellite.name.find("TECH DEMO") != std::string::npos ||
+        satellite.name.find("DEMONSTRATION") != std::string::npos ||
+        satellite.name.find("EXPERIMENT") != std::string::npos ||
+        satellite.name.find("TEST") != std::string::npos;
+}
+
+//bool GroupManager::isWeatherSatellite(const SatelliteTle& satellite) const
+//{
+//    return satellite.name.find("NOAA") != std::string::npos ||
+//        satellite.name.find("METEOR") != std::string::npos ||
+//        satellite.name.find("GOES") != std::string::npos ||
+//        satellite.name.find("METOP") != std::string::npos ||
+//        satellite.name.find("FY") != std::string::npos;
+//}
+//
+//bool GroupManager::isGNSSSatellite(const SatelliteTle& satellite) const
+//{
+//    return satellite.name.find("GPS") != std::string::npos ||
+//        satellite.name.find("GLONASS") != std::string::npos ||
+//        satellite.name.find("GALILEO") != std::string::npos ||
+//        satellite.name.find("BEIDOU") != std::string::npos ||
+//        satellite.name.find("NAVSTAR") != std::string::npos;
+//}
+//
+//bool GroupManager::isSpaceStation(const SatelliteTle& satellite) const
+//{
+//    return satellite.name.find("ISS") != std::string::npos ||
+//        satellite.name.find("TIANGONG") != std::string::npos ||
+//        satellite.name.find("Tiangong") != std::string::npos;
+//}
+//
+//bool GroupManager::isScientificSatellite(const SatelliteTle& satellite) const
+//{
+//    return satellite.name.find("HUBBLE") != std::string::npos ||
+//        satellite.name.find("JAMES WEBB") != std::string::npos ||
+//        satellite.name.find("TESS") != std::string::npos ||
+//        satellite.name.find("KEPLER") != std::string::npos ||
+//        satellite.name.find("HST") != std::string::npos;
+//}
+//
+//bool GroupManager::isISS(const SatelliteTle& satellite) const
+//{
+//    return satellite.name.find("ISS") != std::string::npos;
+//}
 
 void GroupManager::categorizeByOrbit(const SatelliteTle& satellite)
 {
