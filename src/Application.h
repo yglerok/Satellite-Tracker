@@ -66,6 +66,7 @@ private:
 	MouseState mouseState;
 	InputParameters inputParams;
 	RenderOptions renderOptions;
+	std::unordered_map<std::string, int> groupSize; // Save groups size here for GUI filters
 
 	std::atomic<bool> updateInProgress = false;
 	std::future<void> updateFuture;

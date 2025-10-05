@@ -36,9 +36,10 @@ class UI
 public:
 	UI() = delete;
 	UI(const int& width, const int& height, std::shared_ptr<DataManager> dataMngr, 
-		std::shared_ptr<SatelliteManager> satelliteMngr, RenderOptions& options, MouseState& state) :
+		std::shared_ptr<SatelliteManager> satelliteMngr, RenderOptions& options, MouseState& state, 
+		std::unordered_map<std::string, int>& satsInGroups) :
 		windowWidth(width), windowHeight(height), dataManager(dataMngr), 
-		satelliteManager(satelliteMngr), renderOptions(options), mouseState(state) { };
+		satelliteManager(satelliteMngr), renderOptions(options), mouseState(state), groupSize(satsInGroups) { };
 	~UI() = default;
 
 	bool initialize(SDL_Window* window, SDL_GLContext* context);
@@ -49,6 +50,10 @@ private:
 	int windowWidth, windowHeight;
 	std::unordered_map<std::string, FilterGroup> filtersByName;
 	std::unordered_map<std::string, FilterGroup> filtersByOrbitType;
+	std::unordered_map<std::string, FilterGroup> noFilters;
+	
+	std::unordered_map<std::string, int>& groupSize;
+
 	std::vector<std::string> orbitTypes = { "Geostationary", "Low Earth Orbit",
 		"Medium Earth Orbit", "High Earth Orbit", "Polar Orbit",
 		"Very Low Earth Orbit", "Highly Elliptical Orbit", "Geosynchronous Orbit",

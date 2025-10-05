@@ -133,6 +133,18 @@ bool GroupManager::sortSatellitesIntoGroups()
         else if (isSpireSatellite(satellite)) {
             addSatelliteToGroup(satellite.noradId, "Spire");
             categorized = true;
+        } 
+        else if (isAmazonProjectKuiper(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "Project Kuiper");
+            categorized = true;
+        }
+        else if (isSwarmSatellite(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "Swarm");
+            categorized = true;
+        }
+        else if (isPlanetSkySat(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "SKYSAT");
+            categorized = true;
         }
 
         // === 2. НАВИГАЦИОННЫЕ СИСТЕМЫ ===
@@ -158,6 +170,10 @@ bool GroupManager::sortSatellitesIntoGroups()
         }
         else if (isQZSSSatellite(satellite)) {
             addSatelliteToGroup(satellite.noradId, "QZSS");
+            categorized = true;
+        }
+        else if (isSBASSatellite(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "SBAS");
             categorized = true;
         }
 
@@ -186,6 +202,34 @@ bool GroupManager::sortSatellitesIntoGroups()
             addSatelliteToGroup(satellite.noradId, "Thuraya");
             categorized = true;
         }
+        else if (isViasatSatellite(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "Viasat");
+            categorized = true;
+        }
+        else if (isEchoStarSatellite(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "EchoStar");
+            categorized = true;
+        }
+        else if (isSiriusXMSatellite(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "SiriusXM");
+            categorized = true;
+        }
+        else if (isABSsatellite(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "ABS");
+            categorized = true;
+        }
+        else if (isArabsatSatellite(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "Arabsat");
+            categorized = true;
+        }
+        else if (isAsiaSatSatellite(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "AsiaSat");
+            categorized = true;
+        }
+        else if (isGazpromSatellite(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "Gazprom");
+            categorized = true;
+        }
 
         // === 4. НАУЧНЫЕ И ИССЛЕДОВАТЕЛЬСКИЕ ===
         else if (isNASASatellite(satellite)) {
@@ -212,6 +256,34 @@ bool GroupManager::sortSatellitesIntoGroups()
             addSatelliteToGroup(satellite.noradId, "Astronomy");
             categorized = true;
         }
+        else if (isJAXASatellite(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "JAXA");
+            categorized = true;
+        }
+        else if (isISROSSatellite(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "ISRO");
+            categorized = true;
+        }
+        else if (isROSCOSMOSSatellite(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "ROSCOSMOS");
+            categorized = true;
+        }
+        else if (isChineseAcademySciences(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "Chinese Academy Sciences");
+            categorized = true;
+        }
+        else if (isSpaceTelescope(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "Space Telescopes");
+            categorized = true;
+        }
+        else if (isSolarObservation(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "Solar Observation (SDO, SOHO, SOLAR)");
+            categorized = true;
+        }
+        else if (isMagnetosphericResearch(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "Magnetospheric Research (THEMIS, MMS, CLUSTER)");
+            categorized = true;
+        }
 
         // === 5. МЕТЕОРОЛОГИЧЕСКИЕ ===
         else if (isNOAASatellite(satellite)) {
@@ -234,6 +306,22 @@ bool GroupManager::sortSatellitesIntoGroups()
             addSatelliteToGroup(satellite.noradId, "Electro-L");
             categorized = true;
         }
+        else if (isMeteorMSatellite(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "METEOR-M");
+            categorized = true;
+        }
+        else if (isJPSSSatellite(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "JPSS");
+            categorized = true;
+        }
+        else if (isCOSMICsatellite(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "COSMIC");
+            categorized = true;
+        }
+        else if (isGCOMsatellite(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "GCOM");
+            categorized = true;
+        }
 
         // === 6. ВОЕННЫЕ И РАЗВЕДЫВАТЕЛЬНЫЕ ===
         else if (isUSMilitarySatellite(satellite)) {
@@ -252,8 +340,24 @@ bool GroupManager::sortSatellitesIntoGroups()
             addSatelliteToGroup(satellite.noradId, "Early Warning");
             categorized = true;
         }
+        else if (isNROLsatellite(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "NROL");
+            categorized = true;
+        }
+        else if (isTopazSatellite(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "TOPAZ");
+            categorized = true;
+        }
+        else if (isSARsatellite(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "SAR");
+            categorized = true;
+        }
+        else if (isSignalsIntelligence(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "Signals Intelligence (MENTOR, TRUMPET)");
+            categorized = true;
+        }
 
-        // === 7. ЗЕМЛЕНАБЛЮДЕНИЕ ===
+        // === 7. МОНИТОРИНГ ЗЕМЛИ ===
         else if (isLandsatSatellite(satellite)) {
             addSatelliteToGroup(satellite.noradId, "Landsat");
             categorized = true;
@@ -268,6 +372,18 @@ bool GroupManager::sortSatellitesIntoGroups()
         }
         else if (isHighResolutionImagingSatellite(satellite)) {
             addSatelliteToGroup(satellite.noradId, "High Resolution Imaging");
+            categorized = true;
+        }
+        else if (isCommercialImaging(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "Commercial Imaging (PLEIADES, KOMPSAT, RESOURCESAT)");
+            categorized = true;
+        }
+        else if (isHyperspectralImaging(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "Hyperspectral Imaging (HYPER, PRISMA)");
+            categorized = true;
+        }
+        else if (isAgriculturalMonitoring(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "Agricultural Monitoring (SMAP, SOIL)");
             categorized = true;
         }
 
@@ -290,6 +406,10 @@ bool GroupManager::sortSatellitesIntoGroups()
         }
         else if (isDebrisOrRocketBody(satellite)) {
             addSatelliteToGroup(satellite.noradId, "Debris/Rocket Body");
+            categorized = true;
+        }
+        else if (isNanosatellite(satellite)) {
+            addSatelliteToGroup(satellite.noradId, "NANOSAT & PICOSAT");
             categorized = true;
         }
 
@@ -359,6 +479,19 @@ bool GroupManager::isSpireSatellite(const SatelliteTle& satellite) const {
         satellite.name.find("SPIRE") != std::string::npos;
 }
 
+bool GroupManager::isAmazonProjectKuiper(const SatelliteTle& satellite) const {
+    return satellite.name.find("KUIPER") != std::string::npos ||
+        satellite.name.find("Kuiper") != std::string::npos;
+}
+
+bool GroupManager::isSwarmSatellite(const SatelliteTle& satellite) const {
+    return satellite.name.find("SWARM") != std::string::npos;
+}
+
+bool GroupManager::isPlanetSkySat(const SatelliteTle& satellite) const {
+    return satellite.name.find("SKYSAT") != std::string::npos;
+}
+
 // 2. Навигационные системы (детализация)
 bool GroupManager::isGPSSatellite(const SatelliteTle& satellite) const {
     return satellite.name.find("GPS") != std::string::npos ||
@@ -385,6 +518,13 @@ bool GroupManager::isQZSSSatellite(const SatelliteTle& satellite) const {
     return satellite.name.find("QZSS") != std::string::npos;
 }
 
+bool GroupManager::isSBASSatellite(const SatelliteTle& satellite) const {
+    return satellite.name.find("SBAS") != std::string::npos ||
+        satellite.name.find("WAAS") != std::string::npos ||
+        satellite.name.find("EGNOS") != std::string::npos ||
+        satellite.name.find("MSAS") != std::string::npos;
+}
+
 // 3. Коммуникационные операторы
 bool GroupManager::isTelesatSatellite(const SatelliteTle& satellite) const {
     return satellite.name.find("TELESAT") != std::string::npos;
@@ -396,6 +536,36 @@ bool GroupManager::isInmarsatSatellite(const SatelliteTle& satellite) const {
 
 bool GroupManager::isThurayaSatellite(const SatelliteTle& satellite) const {
     return satellite.name.find("THURAYA") != std::string::npos;
+}
+
+bool GroupManager::isViasatSatellite(const SatelliteTle& satellite) const {
+    return satellite.name.find("VIASAT") != std::string::npos ||
+        satellite.name.find("ViaSat") != std::string::npos;
+}
+
+bool GroupManager::isEchoStarSatellite(const SatelliteTle& satellite) const {
+    return satellite.name.find("ECHOSTAR") != std::string::npos;
+}
+
+bool GroupManager::isSiriusXMSatellite(const SatelliteTle& satellite) const {
+    return satellite.name.find("SIRIUS") != std::string::npos ||
+        satellite.name.find("XM") != std::string::npos;
+}
+
+bool GroupManager::isABSsatellite(const SatelliteTle& satellite) const {
+    return satellite.name.find("ABS-") != std::string::npos;
+}
+
+bool GroupManager::isArabsatSatellite(const SatelliteTle& satellite) const {
+    return satellite.name.find("ARABSAT") != std::string::npos;
+}
+
+bool GroupManager::isAsiaSatSatellite(const SatelliteTle& satellite) const {
+    return satellite.name.find("ASIASAT") != std::string::npos;
+}
+
+bool GroupManager::isGazpromSatellite(const SatelliteTle& satellite) const {
+    return satellite.name.find("YAMAL") != std::string::npos;
 }
 
 // 4. Научные и исследовательские
@@ -432,6 +602,39 @@ bool GroupManager::isAstronomySatellite(const SatelliteTle& satellite) const {
         satellite.name.find("SWIFT") != std::string::npos;
 }
 
+bool GroupManager::isJAXASatellite(const SatelliteTle& satellite) const {
+    return satellite.name.find("JAXA") != std::string::npos;
+}
+
+bool GroupManager::isISROSSatellite(const SatelliteTle& satellite) const {
+    return satellite.name.find("ISRO") != std::string::npos;
+}
+
+bool GroupManager::isROSCOSMOSSatellite(const SatelliteTle& satellite) const {
+    return satellite.name.find("ROSCOSMOS") != std::string::npos;
+}
+
+bool GroupManager::isChineseAcademySciences(const SatelliteTle& satellite) const {
+    return satellite.name.find("CAS") != std::string::npos;
+}
+
+bool GroupManager::isSpaceTelescope(const SatelliteTle& satellite) const {
+    return satellite.name.find("TELESCOPE") != std::string::npos ||
+        satellite.name.find("Observatory") != std::string::npos;
+}
+
+bool GroupManager::isSolarObservation(const SatelliteTle& satellite) const {
+    return satellite.name.find("SDO") != std::string::npos ||
+        satellite.name.find("SOHO") != std::string::npos ||
+        satellite.name.find("SOLAR") != std::string::npos;
+}
+
+bool GroupManager::isMagnetosphericResearch(const SatelliteTle& satellite) const {
+    return satellite.name.find("THEMIS") != std::string::npos ||
+        satellite.name.find("MMS") != std::string::npos ||
+        satellite.name.find("CLUSTER") != std::string::npos;
+}
+
 // 5. Метеорологические
 bool GroupManager::isNOAASatellite(const SatelliteTle& satellite) const {
     return satellite.name.find("NOAA") != std::string::npos;
@@ -452,6 +655,23 @@ bool GroupManager::isFengyunSatellite(const SatelliteTle& satellite) const {
 
 bool GroupManager::isElectroLSatellite(const SatelliteTle& satellite) const {
     return satellite.name.find("ELEKTRO") != std::string::npos;
+}
+
+bool GroupManager::isMeteorMSatellite(const SatelliteTle& satellite) const {
+    return satellite.name.find("METEOR-M") != std::string::npos;
+}
+
+bool GroupManager::isJPSSSatellite(const SatelliteTle& satellite) const {
+    return satellite.name.find("JPSS") != std::string::npos ||
+        satellite.name.find("SUOMI") != std::string::npos;
+}
+
+bool GroupManager::isCOSMICsatellite(const SatelliteTle& satellite) const {
+    return satellite.name.find("COSMIC") != std::string::npos;
+}
+
+bool GroupManager::isGCOMsatellite(const SatelliteTle& satellite) const {
+    return satellite.name.find("GCOM") != std::string::npos;
 }
 
 // 6. Военные и разведывательные
@@ -475,6 +695,24 @@ bool GroupManager::isEarlyWarningSatellite(const SatelliteTle& satellite) const 
         satellite.name.find("DSP") != std::string::npos;
 }
 
+bool GroupManager::isNROLsatellite(const SatelliteTle& satellite) const {
+    return satellite.name.find("NROL") != std::string::npos;
+}
+
+bool GroupManager::isTopazSatellite(const SatelliteTle& satellite) const {
+    return satellite.name.find("TOPAZ") != std::string::npos;
+}
+
+bool GroupManager::isSARsatellite(const SatelliteTle& satellite) const {
+    return satellite.name.find("SAR") != std::string::npos ||
+        satellite.name.find("RADARSAT") != std::string::npos;
+}
+
+bool GroupManager::isSignalsIntelligence(const SatelliteTle& satellite) const {
+    return satellite.name.find("MENTOR") != std::string::npos ||
+        satellite.name.find("TRUMPET") != std::string::npos;
+}
+
 // 7. Мониторинг Земли
 bool GroupManager::isLandsatSatellite(const SatelliteTle& satellite) const {
     return satellite.name.find("LANDSAT") != std::string::npos;
@@ -493,6 +731,23 @@ bool GroupManager::isHighResolutionImagingSatellite(const SatelliteTle& satellit
         satellite.name.find("GEOEYE") != std::string::npos ||
         satellite.name.find("QUICKBIRD") != std::string::npos;
 }
+
+bool GroupManager::isCommercialImaging(const SatelliteTle& satellite) const {
+    return satellite.name.find("PLEIADES") != std::string::npos ||
+        satellite.name.find("KOMPSAT") != std::string::npos ||
+        satellite.name.find("RESOURCESAT") != std::string::npos;
+}
+
+bool GroupManager::isHyperspectralImaging(const SatelliteTle& satellite) const {
+    return satellite.name.find("HYPER") != std::string::npos ||
+        satellite.name.find("PRISMA") != std::string::npos;
+}
+
+bool GroupManager::isAgriculturalMonitoring(const SatelliteTle& satellite) const {
+    return satellite.name.find("SMAP") != std::string::npos ||
+        satellite.name.find("SOIL") != std::string::npos;
+}
+
 
 // 8. Специализированные группы
 bool GroupManager::isSpaceStationRelated(const SatelliteTle& satellite) const {
@@ -568,6 +823,11 @@ bool GroupManager::isTechnologyDemoSatellite(const SatelliteTle& satellite) cons
         satellite.name.find("DEMONSTRATION") != std::string::npos ||
         satellite.name.find("EXPERIMENT") != std::string::npos ||
         satellite.name.find("TEST") != std::string::npos;
+}
+
+bool GroupManager::isNanosatellite(const SatelliteTle& satellite) const {
+    return satellite.name.find("NANOSAT") != std::string::npos ||
+        satellite.name.find("PICOSAT") != std::string::npos;
 }
 
 //bool GroupManager::isWeatherSatellite(const SatelliteTle& satellite) const

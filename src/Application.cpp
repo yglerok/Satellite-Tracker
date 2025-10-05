@@ -39,7 +39,7 @@ bool Application::init()
 		return false;
 	}
 
-	ui = std::make_unique<UI>(width, height, dataManager, satelliteManager, renderOptions, mouseState);
+	ui = std::make_unique<UI>(width, height, dataManager, satelliteManager, renderOptions, mouseState, groupSize);
 	ui->initialize(window, &context);
 
 	return true;
@@ -326,6 +326,7 @@ void Application::loadDataFromDatabase()
 	std::cout << "Available groups: " << groups.size() << std::endl;
 	for (const auto& group : groups) {
 		auto satellites = dataManager->getSatellitesByGroup(group);
+		groupSize[group] = satellites.size();
 		std::cout << "Group " << group << ": " << satellites.size() << " satellites" << std::endl;
 	}
 }

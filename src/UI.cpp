@@ -53,10 +53,11 @@ void UI::drawMenu(const std::string& timeString)
 		ImGui::Text("Here you can choose how to sort satellites\n(by name or by orbit type).");
 
 		static int filterType = 0; // 0 - by name, 1 - by orbit type
-		ImGui::RadioButton("By name", &filterType, 0);
-		ImGui::RadioButton("By orbit type", &filterType, 1);
+		ImGui::RadioButton("None", &filterType, 0);
+		ImGui::RadioButton("By name", &filterType, 1);
+		ImGui::RadioButton("By orbit type", &filterType, 2);
 
-		auto& currentFilters = (filterType == 1) ? filtersByOrbitType : filtersByName;
+		auto& currentFilters = (filterType == 2) ? filtersByOrbitType : (filterType == 1) ? filtersByName : noFilters;
 
 		if (ImGui::Button("Select all")) {
 			for (auto& [groupName, group] : currentFilters) {
@@ -77,6 +78,7 @@ void UI::drawMenu(const std::string& timeString)
 		ImGui::BeginChild("Filters", ImVec2(ImGui::GetContentRegionAvail().x, 300),
 			ImGuiChildFlags_None, ImGuiWindowFlags_None);
 
+		int id = 0;
 		for (auto& [groupName, group] : currentFilters) {
 			if (ImGui::Checkbox(groupName.c_str(), &group.isEnabled)) {
 				for (auto& [subgroup, state] : group.subgroups)
@@ -85,14 +87,30 @@ void UI::drawMenu(const std::string& timeString)
 
 			// Отступ
 			ImGui::Indent(20.0f);
-
-			if (group.isEnabled) {
+			ImGui::PushID(id++);
+			if (ImGui::TreeNode("", "% d subgroups", group.subgroups.size())) {
+				for (auto& [subgroup, state] : group.subgroups) {
+					ImGui::Checkbox(subgroup.c_str(), &state);
+					int size = 0;
+					if (auto it = groupSize.find(subgroup); it != groupSize.end())
+						size = it->second;
+					ImGui::SameLine();
+					ImGui::TextDisabled("(%d satellites)", size);
+					
+				}
+					
+				ImGui::TreePop();
+			}
+			
+			ImGui::PopID();
+			
+			/*if (group.isEnabled) {
 				for (auto& [subgroup, state] : group.subgroups)
 					ImGui::Checkbox(subgroup.c_str(), &state);
 			}
 			else {
 				ImGui::TextDisabled("(%d subgroups)", group.subgroups.size());
-			}
+			}*/
 
 			ImGui::Unindent(20.0f);
 			ImGui::Spacing();
@@ -164,65 +182,64 @@ void UI::initializeFilterGroups()
 	// Крупные созвездия
 	filtersByName["Constellations"] = { "Constellations", true, {
 		{"Starlink", true}, {"OneWeb", true}, {"Iridium", true},
-		{"Globalstar", true}, {"ORBCOMM", true}, {"Planet Labs", true}, {"Spire", true}
+		{"Globalstar", true}, {"ORBCOMM", true}, {"Planet Labs", true}, {"Spire", true},
+		{"Project Kuiper", true}, {"Swarm", true}, {"SKYSAT", true}
 	} };
 
 	// Навигационные системы
 	filtersByName["Navigation"] = { "Navigation", true, {
 		{"GPS", true}, {"GLONASS", true}, {"Galileo", true},
-		{"BeiDou", true}, {"IRNSS", true}, {"QZSS", true}
+		{"BeiDou", true}, {"IRNSS", true}, {"QZSS", true},
+		{"SBAS", true}
 	} };
 
 	// Коммуникационные операторы
 	filtersByName["Communication"] = { "Communication", true, {
 		{"Intelsat", true}, {"SES", true}, {"Eutelsat", true},
-		{"Telesat", true}, {"Inmarsat", true}, {"Thuraya", true}
+		{"Telesat", true}, {"Inmarsat", true}, {"Thuraya", true},
+		{"Viasat", true}, {"EchoStar", true}, {"SiriusXM", true},
+		{"ABS", true}, {"Arabsat", true}, {"AsiaSat", true}, {"Gazprom", true}
 	} };
 
 	// Научные и исследовательские
 	filtersByName["Scientific"] = { "Scientific", true, {
 		{"NASA", true}, {"ESA", true}, {"Hubble Space Telescope", true},
-		{"James Webb Telescope", true}, {"Planetary Science", true}, {"Astronomy", true}
+		{"James Webb Telescope", true}, {"Planetary Science", true}, {"Astronomy", true},
+		{"JAXA", true}, {"ISRO", true}, {"ROSCOSMOS", true}, {"Chinese Academy Sciences", true},
+		{"Space Telescopes", true}, {"Solar Observation (SDO, SOHO, SOLAR)", true}, 
+		{"Magnetospheric Research (THEMIS, MMS, CLUSTER)", true}
 	} };
 
 	// Метеорологические
 	filtersByName["Weather"] = { "Weather", true, {
 		{"NOAA", true}, {"GOES", true}, {"Meteosat", true},
-		{"Fengyun", true}, {"Electro-L", true}
+		{"Fengyun", true}, {"Electro-L", true}, {"METEOR-M", true}, 
+		{"JPSS", true}, {"COSMIC", true}, {"GCOM", true}
 	} };
 
 	// Военные
 	filtersByName["Military"] = { "Military", true, {
 		{"US Military", true}, {"Russian Military", true},
-		{"Reconnaissance", true}, {"Early Warning", true}
+		{"Reconnaissance", true}, {"Early Warning", true},
+		{"NROL", true}, {"TOPAZ", true},
+		{"SAR", true}, {"Signals Intelligence (MENTOR, TRUMPET)", true}
 	} };
 
 	// Мониторинг Земли
 	filtersByName["Earth Observation"] = { "Earth Observation", true, {
 		{"Landsat", true}, {"Sentinel", true}, {"SPOT", true},
-		{"High Resolution Imaging", true}
+		{"High Resolution Imaging", true}, {"Commercial Imaging (PLEIADES, KOMPSAT, RESOURCESAT)", true}, 
+		{"Hyperspectral Imaging (HYPER, PRISMA)", true}, {"Agricultural Monitoring (SMAP, SOIL)", true}
 	} };
-
-	// По странам
-	/*filtersByName["Countries"] = { "Countries", true, {
-		{"Russian", true}, {"Chinese", true}, {"Indian", true},
-		{"Japanese", true}, {"European", true}
-	} };*/
 
 	// Специализированные
 	filtersByName["Specialized"] = { "Specialized", true, {
 		{"Amateur Radio", true}, {"CubeSat", true}, {"Technology Demo", true},
-		{"Space Station Related", true}, {"Debris/Rocket Body", true}
+		{"Space Station Related", true}, {"Debris/Rocket Body", true},
+		{"NANOSAT & PICOSAT", true}
 	} };
 
 	// === ОРБИТАЛЬНЫЕ ГРУППЫ ===
-	/*filtersByOrbitType["Orbits"] = { "Orbits", true, {
-		{"Geostationary", true}, {"Geosynchronous Orbit", true},
-		{"Low Earth Orbit", true}, {"Very Low Earth Orbit", true},
-		{"Polar Orbit", true}, {"Medium Earth Orbit", true},
-		{"Highly Elliptical Orbit", true}, {"High Earth Orbit", true},
-		{"Other", true}
-	} };*/
 
 	filtersByOrbitType["Low"] = { "Low", true, {
 		{"Very Low Earth Orbit", true}, {"Low Earth Orbit", true}, 
