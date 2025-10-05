@@ -15,7 +15,7 @@ public:
 
 	void reset();
 	void update(double dt); // обновляем позицию камеры в соответствии с обработанным вводом
-	void render(double alpha); // обновляем матрицу вида
+	void render(); // обновляем матрицу вида
 
 	glm::mat4 getProjection() const { return projection; }
 	glm::mat4 getView() const { return view; }

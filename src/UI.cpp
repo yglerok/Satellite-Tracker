@@ -1,5 +1,7 @@
 #include "UI.h"
 
+#include <algorithm>
+
 bool UI::initialize(SDL_Window* window, SDL_GLContext* context)
 {
 	if (!IMGUI_CHECKVERSION()) {
@@ -34,113 +36,16 @@ void UI::drawMenu(const std::string& timeString)
 
 	//ImGui::ShowDemoWindow();
 
-	ImGui::Begin("Menu", 0, ImGuiWindowFlags_AlwaysAutoResize);
-	ImGui::SeparatorText("Time");
-	ImGui::Text(timeString.c_str());
-	ImGui::SeparatorText("Options");
-	ImGui::Checkbox("Show satellites", &renderOptions.areSatellitesVisible);
-	ImGui::SameLine();
-	ImGui::Checkbox("Show orbits", &renderOptions.areOrbitsVisible);
-	/*if (ImGui::Button("Forced update from network")) {
-		dataManager->forceUpdateTleFromNetwork();
-	}*/
-	if (ImGui::Button("Sort satellites")) {
-		dataManager->sortSatellitesIntoGroups();
-	}
+	//ImGui::SetNextWindowSize(ImVec2(350, windowHeight), ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowPos(ImVec2(0, 0));
+	ImGui::SetNextWindowSize(ImVec2(350, windowHeight));
 
-	if (ImGui::CollapsingHeader("Filters")) {
-		//ImGui::SeparatorText("Info");
-		ImGui::Text("Here you can choose how to sort satellites\n(by name or by orbit type).");
+	ImGui::Begin("Menu", 0, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove);
 
-		static int filterType = 0; // 0 - by name, 1 - by orbit type
-		ImGui::RadioButton("None", &filterType, 0);
-		ImGui::RadioButton("By name", &filterType, 1);
-		ImGui::RadioButton("By orbit type", &filterType, 2);
-
-		auto& currentFilters = (filterType == 2) ? filtersByOrbitType : (filterType == 1) ? filtersByName : noFilters;
-
-		if (ImGui::Button("Select all")) {
-			for (auto& [groupName, group] : currentFilters) {
-				group.isEnabled = true;
-				for (auto& [subgroup, state] : group.subgroups)
-					state = true;
-			}
-		}
-		ImGui::SameLine();
-		if (ImGui::Button("Unselect all")) {
-			for (auto& [groupName, group] : currentFilters) {
-				group.isEnabled = false;
-				for (auto& [subgroup, state] : group.subgroups)
-					state = false;
-			}
-		}
-
-		ImGui::BeginChild("Filters", ImVec2(ImGui::GetContentRegionAvail().x, 300),
-			ImGuiChildFlags_None, ImGuiWindowFlags_None);
-
-		int id = 0;
-		for (auto& [groupName, group] : currentFilters) {
-			if (ImGui::Checkbox(groupName.c_str(), &group.isEnabled)) {
-				for (auto& [subgroup, state] : group.subgroups)
-					state = group.isEnabled;
-			}
-
-			// Отступ
-			ImGui::Indent(20.0f);
-			ImGui::PushID(id++);
-			if (ImGui::TreeNode("", "% d subgroups", group.subgroups.size())) {
-				for (auto& [subgroup, state] : group.subgroups) {
-					ImGui::Checkbox(subgroup.c_str(), &state);
-					int size = 0;
-					if (auto it = groupSize.find(subgroup); it != groupSize.end())
-						size = it->second;
-					ImGui::SameLine();
-					ImGui::TextDisabled("(%d satellites)", size);
-					
-				}
-					
-				ImGui::TreePop();
-			}
-			
-			ImGui::PopID();
-			
-			/*if (group.isEnabled) {
-				for (auto& [subgroup, state] : group.subgroups)
-					ImGui::Checkbox(subgroup.c_str(), &state);
-			}
-			else {
-				ImGui::TextDisabled("(%d subgroups)", group.subgroups.size());
-			}*/
-
-			ImGui::Unindent(20.0f);
-			ImGui::Spacing();
-		}
-
-		ImGui::EndChild();
-
-		mouseState.isOnMenuScrollArea = (ImGui::IsItemHovered()) ? true : false;
-
-		std::unordered_map<std::string, bool> flatFilters;
-
-		for (const auto& [groupName, group] : currentFilters) {
-			if (group.subgroups.empty()) {
-				flatFilters[groupName] = group.isEnabled ? true : false;
-				continue;
-			}
-
-			for (const auto& [subgroup, state] : group.subgroups) {
-				flatFilters[subgroup] = state ? true : false;
-			}
-		}
-
-		satelliteManager->setGroupFilters(flatFilters);
-	}
-
-	if (ImGui::CollapsingHeader("Color options")) {
-		ImGui::Text("Here you can choose colors for satellites\nand orbits.");
-		ImGui::ColorEdit4("Satellites color", renderOptions.satellitesColor, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_AlphaBar);
-		ImGui::ColorEdit4("Orbits color", renderOptions.orbitsColor, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_AlphaBar);
-	}
+	drawTimeBlock(timeString);
+	drawOptionsBlock();
+	drawFiltersBlock();
+	drawColorBlock();
 
 	ImGui::End();
 
@@ -205,9 +110,9 @@ void UI::initializeFilterGroups()
 	filtersByName["Scientific"] = { "Scientific", true, {
 		{"NASA", true}, {"ESA", true}, {"Hubble Space Telescope", true},
 		{"James Webb Telescope", true}, {"Planetary Science", true}, {"Astronomy", true},
-		{"JAXA", true}, {"ISRO", true}, {"ROSCOSMOS", true}, {"Chinese Academy Sciences", true},
-		{"Space Telescopes", true}, {"Solar Observation (SDO, SOHO, SOLAR)", true}, 
-		{"Magnetospheric Research (THEMIS, MMS, CLUSTER)", true}
+		{"JAXA", true}, {"ISRO", true}, {"ROSCOSMOS", true}, {"CAS", true},
+		{"Space Telescopes", true}, {"Solar Observation", true}, 
+		{"Magnetospheric Research", true}
 	} };
 
 	// Метеорологические
@@ -222,14 +127,14 @@ void UI::initializeFilterGroups()
 		{"US Military", true}, {"Russian Military", true},
 		{"Reconnaissance", true}, {"Early Warning", true},
 		{"NROL", true}, {"TOPAZ", true},
-		{"SAR", true}, {"Signals Intelligence (MENTOR, TRUMPET)", true}
+		{"SAR", true}, {"Signals Intelligence", true}
 	} };
 
 	// Мониторинг Земли
 	filtersByName["Earth Observation"] = { "Earth Observation", true, {
 		{"Landsat", true}, {"Sentinel", true}, {"SPOT", true},
-		{"High Resolution Imaging", true}, {"Commercial Imaging (PLEIADES, KOMPSAT, RESOURCESAT)", true}, 
-		{"Hyperspectral Imaging (HYPER, PRISMA)", true}, {"Agricultural Monitoring (SMAP, SOIL)", true}
+		{"High Resolution Imaging", true}, {"Commercial Imaging", true}, 
+		{"Hyperspectral Imaging", true}, {"Agricultural Monitoring", true}
 	} };
 
 	// Специализированные
@@ -254,4 +159,115 @@ void UI::initializeFilterGroups()
 	} };
 
 	filtersByOrbitType["Other"] = { "Other", true };
+}
+
+void UI::drawTimeBlock(const std::string& timeString)
+{
+	ImGui::SeparatorText("Time");
+	ImGui::Text(timeString.c_str());
+	ImGui::SeparatorText("Options");
+}
+
+void UI::drawOptionsBlock()
+{
+	ImGui::Checkbox("Show satellites", &renderOptions.areSatellitesVisible);
+	ImGui::SameLine();
+	ImGui::Checkbox("Show orbits", &renderOptions.areOrbitsVisible);
+
+	/*if (ImGui::Button("Sort satellites")) {
+		dataManager->sortSatellitesIntoGroups();
+	}*/
+}
+
+void UI::drawFiltersBlock()
+{
+	if (ImGui::CollapsingHeader("Filters")) {
+		ImGui::Text("Here you can choose how to sort satellites\n(by name or by orbit type).");
+
+		static int filterType = 0; // 0 - by name, 1 - by orbit type
+		ImGui::RadioButton("None", &filterType, 0);
+		ImGui::RadioButton("By name", &filterType, 1);
+		ImGui::RadioButton("By orbit type", &filterType, 2);
+
+		auto& currentFilters = (filterType == 2) ? filtersByOrbitType : (filterType == 1) ? filtersByName : noFilters;
+
+		if (ImGui::Button("Select all")) {
+			for (auto& [groupName, group] : currentFilters) {
+				group.isEnabled = true;
+				for (auto& [subgroup, state] : group.subgroups)
+					state = true;
+			}
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Unselect all")) {
+			for (auto& [groupName, group] : currentFilters) {
+				group.isEnabled = false;
+				for (auto& [subgroup, state] : group.subgroups)
+					state = false;
+			}
+		}
+
+		int scrollbarHeight = (filterType == 0) ? 1 : 600;
+
+		ImGui::BeginChild("Filters", ImVec2(ImGui::GetContentRegionAvail().x, scrollbarHeight),
+			ImGuiChildFlags_None, ImGuiWindowFlags_None);
+
+		int id = 0;
+		for (auto& [groupName, group] : currentFilters) {
+			if (ImGui::Checkbox(groupName.c_str(), &group.isEnabled)) {
+				for (auto& [subgroup, state] : group.subgroups)
+					state = group.isEnabled;
+			}
+
+			// Отступ
+			ImGui::Indent(20.0f);
+			ImGui::PushID(id++);
+			if (ImGui::TreeNode("", "% d subgroups", group.subgroups.size())) {
+				for (auto& [subgroup, state] : group.subgroups) {
+					ImGui::Checkbox(subgroup.c_str(), &state);
+					int size = 0;
+					if (auto it = groupSize.find(subgroup); it != groupSize.end())
+						size = it->second;
+					ImGui::SameLine();
+					ImGui::TextDisabled("(%d)", size);
+
+				}
+
+				ImGui::TreePop();
+			}
+
+			ImGui::PopID();
+
+			ImGui::Unindent(20.0f);
+			ImGui::Spacing();
+		}
+
+		ImGui::EndChild();
+
+		mouseState.isOnMenuScrollArea = (ImGui::IsItemHovered()) ? true : false;
+
+		std::unordered_map<std::string, bool> flatFilters;
+
+		for (const auto& [groupName, group] : currentFilters) {
+			if (group.subgroups.empty()) {
+				flatFilters[groupName] = group.isEnabled ? true : false;
+				continue;
+			}
+
+			for (const auto& [subgroup, state] : group.subgroups) {
+				flatFilters[subgroup] = state ? true : false;
+			}
+		}
+
+		satelliteManager->setGroupFilters(flatFilters);
+	}
+}
+
+void UI::drawColorBlock()
+{
+	if (ImGui::CollapsingHeader("Color options")) {
+		ImGui::Text("Here you can choose colors for satellites\nand orbits.");
+		ImGui::ColorEdit4("Satellites color", renderOptions.satellitesColor, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_AlphaBar);
+		ImGui::ColorEdit4("Orbits color", renderOptions.orbitsColor, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_AlphaBar);
+	}
 }

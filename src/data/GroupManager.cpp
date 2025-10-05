@@ -269,7 +269,7 @@ bool GroupManager::sortSatellitesIntoGroups()
             categorized = true;
         }
         else if (isChineseAcademySciences(satellite)) {
-            addSatelliteToGroup(satellite.noradId, "Chinese Academy Sciences");
+            addSatelliteToGroup(satellite.noradId, "CAS");
             categorized = true;
         }
         else if (isSpaceTelescope(satellite)) {
@@ -277,11 +277,11 @@ bool GroupManager::sortSatellitesIntoGroups()
             categorized = true;
         }
         else if (isSolarObservation(satellite)) {
-            addSatelliteToGroup(satellite.noradId, "Solar Observation (SDO, SOHO, SOLAR)");
+            addSatelliteToGroup(satellite.noradId, "Solar Observation");
             categorized = true;
         }
         else if (isMagnetosphericResearch(satellite)) {
-            addSatelliteToGroup(satellite.noradId, "Magnetospheric Research (THEMIS, MMS, CLUSTER)");
+            addSatelliteToGroup(satellite.noradId, "Magnetospheric Research");
             categorized = true;
         }
 
@@ -353,7 +353,7 @@ bool GroupManager::sortSatellitesIntoGroups()
             categorized = true;
         }
         else if (isSignalsIntelligence(satellite)) {
-            addSatelliteToGroup(satellite.noradId, "Signals Intelligence (MENTOR, TRUMPET)");
+            addSatelliteToGroup(satellite.noradId, "Signals Intelligence");
             categorized = true;
         }
 
@@ -375,15 +375,15 @@ bool GroupManager::sortSatellitesIntoGroups()
             categorized = true;
         }
         else if (isCommercialImaging(satellite)) {
-            addSatelliteToGroup(satellite.noradId, "Commercial Imaging (PLEIADES, KOMPSAT, RESOURCESAT)");
+            addSatelliteToGroup(satellite.noradId, "Commercial Imaging");
             categorized = true;
         }
         else if (isHyperspectralImaging(satellite)) {
-            addSatelliteToGroup(satellite.noradId, "Hyperspectral Imaging (HYPER, PRISMA)");
+            addSatelliteToGroup(satellite.noradId, "Hyperspectral Imaging");
             categorized = true;
         }
         else if (isAgriculturalMonitoring(satellite)) {
-            addSatelliteToGroup(satellite.noradId, "Agricultural Monitoring (SMAP, SOIL)");
+            addSatelliteToGroup(satellite.noradId, "Agricultural Monitoring");
             categorized = true;
         }
 

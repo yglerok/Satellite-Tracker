@@ -11,12 +11,27 @@ TimeManager::TimeManager()
 
 void TimeManager::update(double deltaTime)
 {
-    auto duration = std::chrono::duration_cast<std::chrono::system_clock::duration>(
-        std::chrono::duration<double>(deltaTime)
-    );
-    currentTime += duration;
+    //auto duration = std::chrono::duration_cast<std::chrono::system_clock::duration>(
+    //    std::chrono::duration<double>(deltaTime)
+    //);
+    //currentTime += duration;
 
-    julianDate += deltaTime / 86400.0; // Преобразуем секунды в дни
+    //julianDate += deltaTime / 86400.0; // Преобразуем секунды в дни
+
+    currentTime = std::chrono::system_clock::now();
+
+    // Пересчитываем юлианскую дату из текущего системного времени
+    std::time_t time = std::chrono::system_clock::to_time_t(currentTime);
+    std::tm tm = getUtcTime(time);
+
+    int year = 1900 + tm.tm_year;
+    int month = 1 + tm.tm_mon;
+    int day = tm.tm_mday;
+    int hour = tm.tm_hour;
+    int minute = tm.tm_min;
+    int second = tm.tm_sec;
+
+    julianDate = calcJulianDate(year, month, day, hour, minute, second);
 }
 
 time_t TimeManager::toTimeT(std::chrono::system_clock::time_point timePoint)

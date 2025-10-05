@@ -14,6 +14,7 @@ bool SatelliteManager::initialize()
 
 void SatelliteManager::update(double utcJd)
 {
+	static const int MAX_ORBIT_POINTS = 100; 
 	static unsigned int updateCounter = 0;
 	satelliteStates.clear();
 	satelliteStates.reserve(satelliteData.size());
@@ -49,11 +50,12 @@ void SatelliteManager::update(double utcJd)
 			if (++updateCounter % 5 == 0) {
 				glm::dvec3 scaledPosition = positionEcef / 6371.0;
 				scaledPosition = glm::vec3(scaledPosition.y, scaledPosition.z, -scaledPosition.x);
+
+				if (orbitCache[noradId].size()  >= MAX_ORBIT_POINTS) 
+					orbitCache[noradId].erase(orbitCache[noradId].begin());
+
 				orbitCache[noradId].push_back(glm::vec3(scaledPosition));
 			}
-
-			orbitCache[noradId] = thinOrbitCache(orbitCache[noradId]);
-			
 
 			// 5. Применяем фильтр
 			satData.currentState.isVisible = isSatelliteVisible(noradId);
@@ -69,8 +71,6 @@ void SatelliteManager::update(double utcJd)
 		}
 
 	}
-
-	//updateOrbitCache(utcJd, orbitDurationHours, orbitSegments);
 }
 
 void SatelliteManager::setEventBus(EventBus* bus)
@@ -171,22 +171,4 @@ bool SatelliteManager::isSatelliteVisible(int noradId) const
 	}
 
 	return false;
-}
-
-std::vector<glm::vec3> SatelliteManager::thinOrbitCache(const std::vector<glm::vec3>& points, int targetcount)
-{
-	if (points.size() < targetcount)
-		return points;
-	
-	std::vector<glm::vec3> result;
-	result.push_back(points[0]); // сохраняем первую точку
-
-	double step = double(points.size() - 1) / (targetcount - 1);
-	for (int i = 1; i < targetcount - 1; i++) {
-		size_t index = static_cast<size_t>(i * step);
-		result.push_back(points[index]);
-	}
-	result.push_back(points.back()); // сохраняем последнюю точку
-	
-	return result;
 }

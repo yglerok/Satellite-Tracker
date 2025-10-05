@@ -28,7 +28,7 @@ struct MouseState {
 struct FilterGroup {
 	std::string name;
 	bool isEnabled;
-	std::unordered_map<std::string, bool> subgroups;
+	std::map<std::string, bool> subgroups;
 };
 
 class UI
@@ -48,9 +48,9 @@ public:
 
 private:
 	int windowWidth, windowHeight;
-	std::unordered_map<std::string, FilterGroup> filtersByName;
-	std::unordered_map<std::string, FilterGroup> filtersByOrbitType;
-	std::unordered_map<std::string, FilterGroup> noFilters;
+	std::map<std::string, FilterGroup> filtersByName;
+	std::map<std::string, FilterGroup> filtersByOrbitType;
+	std::map<std::string, FilterGroup> noFilters;
 	
 	std::unordered_map<std::string, int>& groupSize;
 
@@ -66,7 +66,8 @@ private:
 
 	void initializeFilterGroups();
 
-	void drawTimeBlock();
-	void drawForcedUpdateBlock();
-	void drawFilters();
+	void drawTimeBlock(const std::string& timeString);
+	void drawOptionsBlock();
+	void drawFiltersBlock();
+	void drawColorBlock();
 };

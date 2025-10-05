@@ -60,11 +60,11 @@ void Camera::update(double dt)
 	position.current = glm::vec3(camX, camY, camZ);
 }
 
-void Camera::render(double alpha)
+void Camera::render()
 {
 	// »нтерпол€ци€ позиции камеры дл€ плавности
 	position.render = position.previous +
-		(position.current - position.previous) * float(alpha);
+		(position.current - position.previous);
 
 	// ќбновл€ем view матрицу с интерполированной позицией
 	view = glm::lookAt(

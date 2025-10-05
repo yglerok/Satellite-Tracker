@@ -66,10 +66,10 @@ void Application::start()
 
 	// Инициализация таймеров
 	auto previousTime = std::chrono::steady_clock::now();
-	auto currentTime = previousTime;
-	double lag = 0.0;
-	constexpr double fixed_dt = 1.0 / 60.0;
-	constexpr double max_lag = 0.1; // Максимальный лаг 100ms
+	//auto currentTime = previousTime;
+	//double lag = 0.0;
+	//constexpr double fixed_dt = 1.0 / 60.0;
+	//constexpr double max_lag = 0.1; // Максимальный лаг 100ms
 
 	SDL_GL_SetSwapInterval(1); // Включаем vsync
 
@@ -102,38 +102,15 @@ void Application::start()
 	dataLoadingThread.join();
 
 	while (isRunning) {
-		currentTime = std::chrono::steady_clock::now();
-		double elapsedTime = std::chrono::duration<double>(currentTime - previousTime).count();
+		auto currentTime = std::chrono::steady_clock::now();
+		double realElapsedTime = std::chrono::duration<double>(currentTime - previousTime).count();
 		previousTime = currentTime;
 
-		// Ограничение максимального лага для избежания спирали смерти
-		if (elapsedTime > max_lag) {
-			elapsedTime = max_lag;
-		}
-
-		lag += elapsedTime;
-
 		processInput();
-
-		// Обновление физики с защитой от спирали смерти
-		int updateCount = 0;
-		constexpr int max_updates_per_frame = 10;
-
-		while (lag >= fixed_dt && updateCount < max_updates_per_frame) {
-			update(fixed_dt);
-			lag -= fixed_dt;
-			updateCount++;
-		}
-
-		// Если мы всё ещё отстаём, сбрасываем лаг чтобы избежать спирали смерти
-		if (lag >= fixed_dt) {
-			lag = 0.0;
-			std::cout << "WARNING: Physics update lag detected, resetting lag" << std::endl;
-		}
 		
-		// Интерполяция для более плавного рендера
-		double alpha = lag / fixed_dt;
-		render(alpha);
+		update(realElapsedTime);
+
+		render();
 
 		SDL_GL_SwapWindow(window);
 	}
@@ -264,7 +241,7 @@ void Application::update(double dt)
 	
 }
 
-void Application::render(double alpha)
+void Application::render()
 {
 	// Проверка ДО очистки
 	GLenum err = glGetError();
@@ -275,7 +252,7 @@ void Application::render(double alpha)
 	// Очистка буферов
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	camera->render(alpha);
+	camera->render();
 
 	//earth->renderSunDirection(camera->getView(), camera->getProjection(), sunDir);
 
@@ -290,8 +267,7 @@ void Application::render(double alpha)
 		float maxSize = 3.0f, minSize = 1.0f;
 		satelliteSize = maxSize + (cameraRadius - minR) * (minSize - maxSize) / (maxR - minR);
 	}
-	//float satelliteSize = 5.0f + (camera->getRadius() - 3.0f) * (0.5f - 5.0f) / (20.0f - 3.0f);
-	//float satelliteSize = 2.0f;
+
 	satelliteRenderer->setSatelliteSize(satelliteSize);
 	satelliteRenderer->setSatelliteColor(glm::vec4(renderOptions.satellitesColor[0], renderOptions.satellitesColor[1], 
 		renderOptions.satellitesColor[2], renderOptions.satellitesColor[3]));
@@ -361,8 +337,6 @@ bool Application::initializeManagers()
 
 	dataManager->setEventBus(eventBus.get());
 	satelliteManager->setEventBus(eventBus.get());
-
-	// Загрузка и сортировка спутников
 
 	{
 		std::lock_guard<std::mutex> lock(dataMutex);

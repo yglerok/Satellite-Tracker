@@ -104,11 +104,6 @@ private:
 	bool isCubeSat(const SatelliteTle& satellite) const;
 	bool isTechnologyDemoSatellite(const SatelliteTle& satellite) const;
 	bool isNanosatellite(const SatelliteTle& satellite) const;
-	bool isWeatherSatellite(const SatelliteTle& satellite) const;
-	bool isGNSSSatellite(const SatelliteTle& satellite) const;
-	bool isSpaceStation(const SatelliteTle& satellite) const;
-	bool isScientificSatellite(const SatelliteTle& satellite) const;
-	bool isISS(const SatelliteTle& satellite) const;
 	void categorizeByOrbit(const SatelliteTle& satellite);
 
 	std::shared_ptr<Database> database;

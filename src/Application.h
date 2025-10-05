@@ -47,10 +47,11 @@ private:
 	bool isRunning = true;
 	const int FPS = 60;
 	const double satelliteUpdateInterval = 0.5;
+	std::chrono::steady_clock::time_point lastUpdateTime;
 	
 	void processInput();
 	void update(double dt);
-	void render(double alpha);
+	void render();
 
 	SDL_Window* window = nullptr;
 	SDL_GLContext context;
