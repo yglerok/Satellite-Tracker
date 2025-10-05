@@ -2,6 +2,16 @@
 
 #include <algorithm>
 
+void UI::updateWindowSize(int newWidth, int newHeight)
+{
+	windowWidth = newWidth;
+	windowHeight = newHeight;
+
+	ImGuiIO& io = ImGui::GetIO();
+	io.DisplaySize.x = static_cast<float>(windowWidth);
+	io.DisplaySize.y = static_cast<float>(windowHeight);
+}
+
 bool UI::initialize(SDL_Window* window, SDL_GLContext* context)
 {
 	if (!IMGUI_CHECKVERSION()) {

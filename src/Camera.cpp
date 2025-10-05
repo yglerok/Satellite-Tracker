@@ -36,6 +36,16 @@ void Camera::increaseRadius(float deltaR)
 	radius.target = glm::clamp(radius.target, 3.0f, 20.0f);
 }
 
+void Camera::updateProjection(int width, int height)
+{
+	projection = glm::perspective(
+		glm::radians(45.0f),
+		float(width) / float(height),
+		0.1f,
+		100.0f
+	);
+}
+
 void Camera::reset()
 {
 	phi.target = 0.0f;

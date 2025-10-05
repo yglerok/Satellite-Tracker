@@ -7,10 +7,7 @@
 Application::Application(const char* appTitle, int appWidth, int appHeight) :
 	title(appTitle), width(appWidth), height(appHeight)
 {
-	camera = new Camera(width, height);
-	if (!camera) {
-		std::cerr << "Failed to create camera" << std::endl;
-	}
+	camera = nullptr;
 }
 
 bool Application::init()
@@ -19,7 +16,32 @@ bool Application::init()
 		std::cerr << "ERROR [SDL] Can't initialize SDL!" << std::endl;
 		return false;
 	}
+
+	// Получаем информацию о дисплее
+	SDL_DisplayID display = SDL_GetPrimaryDisplay();
+	const SDL_DisplayMode* mode = SDL_GetDesktopDisplayMode(display);
+	if (!mode) {
+		std::cerr << "Failed to get current display mode: " << SDL_GetError() << std::endl;
+		return false;
+	}
+	displayWidth = mode->w;
+	displayHeight = mode->h;
+
+	std::cout << "Display resolution: " << displayWidth << "x" << displayHeight << std::endl;
+
+	// Если дисплей меньше FHD, используем его разрешение
+	if (displayWidth < 1920 || displayHeight < 1080) {
+		std::cout << "Using display resolution: " << displayWidth << "x" << displayHeight << std::endl;
+	}
+	else {
+		// Используем FHD
+		displayWidth = 1920;
+		displayHeight = 1080;
+	}
 	
+	width = displayWidth;
+	height = displayHeight;
+
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
@@ -33,6 +55,8 @@ bool Application::init()
 		std::cerr << "ERROR [glad] Can't load GL!" << std::endl;
 		return false;
 	}
+
+	//toggleFullscreen();
 
 	if (!initializeManagers()) {
 		std::cerr << "Failed to init App!" << std::endl;
@@ -136,6 +160,52 @@ void Application::shutdown()
 	SDL_Quit();
 }
 
+void Application::toggleFullscreen()
+{
+	isFullscreen = !isFullscreen;
+
+	if (isFullscreen) {
+		// Полноэкранный оконный режим
+		SDL_SetWindowFullscreen(window, true);
+		std::cout << "Switched to fullscreen: " << width << "x" << height << std::endl;
+	}
+	else {
+		// Оконный режим
+		SDL_SetWindowFullscreen(window, false);
+		// Возвращаем к FHD размеру
+		SDL_SetWindowSize(window, 1920, 1080);
+		//SDL_CenterWindowInDisplay(window, SDL_GetPrimaryDisplay());
+		std::cout << "Switched to windowed mode" << std::endl;
+	}
+
+	// Обновляем камеру с новыми размерами
+	if (camera) {
+		// Нужно будет обновить камеру или пересоздать
+		camera->updateProjection(width, height);
+	}
+}
+
+void Application::updateWindowSize()
+{
+	// Получаем актуальный размер окна
+	SDL_GetWindowSize(window, &width, &height);
+	std::cout << "Window resized to: " << width << "x" << height << std::endl;
+
+	// Обновляем viewport OpenGL
+	glViewport(0, 0, width, height);
+
+	// Обновляем проекцию камеры
+	if (camera) {
+		camera->updateProjection(width, height);
+	}
+
+	// Обновляем UI
+	if (ui) {
+		// Нужно будет добавить метод обновления размеров в UI
+		ui->updateWindowSize(width, height);
+	}
+}
+
 void Application::processInput()
 {
 	SDL_Event event;
@@ -145,6 +215,9 @@ void Application::processInput()
 		{
 		case SDL_EVENT_QUIT:
 			isRunning = false;
+			break;
+		case SDL_EVENT_WINDOW_RESIZED:
+			updateWindowSize();
 			break;
 		case SDL_EVENT_MOUSE_WHEEL:
 			if (mouseState.isOnMenuScrollArea)
@@ -178,6 +251,9 @@ void Application::processInput()
 			break;
 		}
 		case SDL_EVENT_KEY_DOWN:
+			if (event.key.scancode == SDL_SCANCODE_F11) {
+				toggleFullscreen();
+			}
 			if (event.key.scancode == SDL_SCANCODE_R) {
 				camera->reset();
 			}
@@ -249,6 +325,8 @@ void Application::render()
 		std::cerr << "OpenGL error before clear: " << err << std::endl;
 	}
 
+	glViewport(0, 0, width, height);
+
 	// Очистка буферов
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -260,14 +338,7 @@ void Application::render()
 	earth->render(camera->getView(), camera->getProjection(), shaderProgram);
 
 	// Вычисление размера спутников в зависимости от отдаления камеры (используем линейную интерполяцию)
-	float satelliteSize = 4.0f;
-	float cameraRadius = camera->getRadius();
-	if (cameraRadius > 4.0f) {
-		float maxR = 20.0f, minR = 3.0f;
-		float maxSize = 3.0f, minSize = 1.0f;
-		satelliteSize = maxSize + (cameraRadius - minR) * (minSize - maxSize) / (maxR - minR);
-	}
-
+	float satelliteSize = calculateSatelliteSize();
 	satelliteRenderer->setSatelliteSize(satelliteSize);
 	satelliteRenderer->setSatelliteColor(glm::vec4(renderOptions.satellitesColor[0], renderOptions.satellitesColor[1], 
 		renderOptions.satellitesColor[2], renderOptions.satellitesColor[3]));
@@ -309,6 +380,13 @@ void Application::loadDataFromDatabase()
 
 bool Application::initializeManagers()
 {
+	// Создаём камеру после того как узнали размеры окна
+	camera = new Camera(width, height);
+	if (!camera) {
+		std::cerr << "Failed to create camera" << std::endl;
+		return false;
+	}
+
 	eventBus = std::make_unique<EventBus>();
 	
 	// Создание менеджера времени
@@ -345,4 +423,21 @@ bool Application::initializeManagers()
 	}
 
 	return true;
+}
+
+float Application::calculateSatelliteSize()
+{
+	// Адаптивный размер спутников в зависимости от разрешения
+	float baseSize = 4.0f;
+	float cameraRadius = camera->getRadius();
+
+	if (cameraRadius > 4.0f) {
+		float maxR = 20.0f, minR = 3.0f;
+		float maxSize = 3.0f, minSize = 1.0f;
+		baseSize = maxSize + (cameraRadius - minR) * (minSize - maxSize) / (maxR - minR);
+	}
+
+	// Масштабирование в зависимости от разрешения
+	float scaleFactor = std::min(width / 1920.0f, height / 1080.0f);
+	return baseSize * scaleFactor;
 }

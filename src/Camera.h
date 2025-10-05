@@ -13,6 +13,8 @@ public:
 	void increaseTheta(float deltaTheta);
 	void increaseRadius(float deltaR);
 
+	void updateProjection(int width, int height);
+
 	void reset();
 	void update(double dt); // обновляем позицию камеры в соответствии с обработанным вводом
 	void render(); // обновляем матрицу вида

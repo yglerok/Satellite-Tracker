@@ -42,6 +42,8 @@ public:
 		satelliteManager(satelliteMngr), renderOptions(options), mouseState(state), groupSize(satsInGroups) { };
 	~UI() = default;
 
+	void updateWindowSize(int newWidth, int newHeight);
+
 	bool initialize(SDL_Window* window, SDL_GLContext* context);
 	void drawMenu(const std::string& timeString);
 	void drawLoadingWindow();

@@ -48,7 +48,14 @@ private:
 	const int FPS = 60;
 	const double satelliteUpdateInterval = 0.5;
 	std::chrono::steady_clock::time_point lastUpdateTime;
-	
+
+	bool isFullscreen = false;
+	int displayWidth = 1920;   // FHD по умолчанию
+	int displayHeight = 1080;
+
+	void toggleFullscreen();
+	void updateWindowSize();
+		
 	void processInput();
 	void update(double dt);
 	void render();
@@ -85,6 +92,8 @@ private:
 
 	std::shared_ptr<TimeManager> timeManager;
 	std::unique_ptr<EventBus> eventBus;
+
+	float calculateSatelliteSize();
 
 	bool initializeManagers();
 };
