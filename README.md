@@ -73,8 +73,8 @@ cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE=[path/to/vcpkg]/scripts/buildsystems/
 
 # Сборка
 cmake --build build --config Release
-Замените [path/to/vcpkg] на полный путь к вашей директории vcpkg.
 ```
+Замените [path/to/vcpkg] на полный путь к вашей директории vcpkg.
 
 ### Запуск
 После успешной сборки исполняемый файл будет находиться в папке ``` build/bin/ ```
